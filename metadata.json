@@ -1,0 +1,6 @@
+{
+  "name": "PriceSnap",
+  "description": "The ultimate price scanner for thrift finds, clothing, collectibles, and secondhand goods.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
