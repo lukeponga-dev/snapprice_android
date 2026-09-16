@@ -8,6 +8,9 @@ interface HistoryDao {
     @Query("SELECT * FROM history ORDER BY date DESC")
     fun getAllHistory(): Flow<List<HistoryEntity>>
 
+    @Query("SELECT * FROM history")
+    suspend fun getAllHistoryOnce(): List<HistoryEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHistory(entity: HistoryEntity)
 

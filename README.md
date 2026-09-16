@@ -43,3 +43,8 @@ dev.lukeponga.pricesnap
 
 ---
 Built with ❤️ using **Google AI Studio** & **Jetpack Compose**.
+
+## Privacy and data deletion
+
+- [Privacy Policy](PRIVACY_POLICY.md)
+- [Data Deletion Policy](DATA_DELETION_POLICY.md)
