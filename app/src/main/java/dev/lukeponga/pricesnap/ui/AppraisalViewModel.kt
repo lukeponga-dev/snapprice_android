@@ -27,7 +27,10 @@ sealed class AppraisalUiState {
 
 sealed class BackendStatus {
     object Checking : BackendStatus()
-    object Connected : BackendStatus()
+    data class Connected(
+        val service: String,
+        val timestamp: Long
+    ) : BackendStatus()
     object Offline : BackendStatus()
     data class Error(val msg: String) : BackendStatus()
 }
@@ -47,17 +50,25 @@ class AppraisalViewModel(private val repository: HistoryRepository) : ViewModel(
 
     fun checkBackendHealth() {
         viewModelScope.launch {
-            _backendStatus.value = BackendStatus.Checking
-            try {
-                val response = NetworkClient.apiService.ping()
-                if (response.isSuccessful && response.body()?.status == "ok") {
-                    _backendStatus.value = BackendStatus.Connected
-                } else {
-                    _backendStatus.value = BackendStatus.Error("Degraded (${response.code()})")
-                }
-            } catch (e: Exception) {
-                _backendStatus.value = BackendStatus.Offline
+            refreshBackendHealth()
+        }
+    }
+
+    private suspend fun refreshBackendHealth() {
+        _backendStatus.value = BackendStatus.Checking
+        try {
+            val response = NetworkClient.apiService.ping()
+            val ping = response.body()
+            if (response.isSuccessful && ping?.status == "ok") {
+                _backendStatus.value = BackendStatus.Connected(
+                    service = ping.service,
+                    timestamp = ping.timestamp
+                )
+            } else {
+                _backendStatus.value = BackendStatus.Error("Degraded (${response.code()})")
             }
+        } catch (e: Exception) {
+            _backendStatus.value = BackendStatus.Offline
         }
     }
 
@@ -74,6 +85,7 @@ class AppraisalViewModel(private val repository: HistoryRepository) : ViewModel(
     fun analyzeCapturedImage(base64Image: String, imageFile: File? = null) {
         viewModelScope.launch {
             _uiState.value = AppraisalUiState.Loading
+            refreshBackendHealth()
             try {
                 val request = ImageRequest(image = base64Image)
                 val response = NetworkClient.apiService.analyzeItem(request)
