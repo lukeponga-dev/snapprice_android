@@ -58,6 +58,7 @@ fun MainContainer(viewModel: AppraisalViewModel) {
     var selectedTab by remember { mutableStateOf(0) }
     val uiState by viewModel.uiState.collectAsState()
     val historyList by viewModel.history.collectAsState()
+    val backendStatus by viewModel.backendStatus.collectAsState()
 
     Scaffold(
         topBar = {
@@ -106,7 +107,6 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                     }
                 },
                 actions = {
-                    val backendStatus by viewModel.backendStatus.collectAsState()
                     val (statusColor, dotColor, label) = when (backendStatus) {
                         is dev.lukeponga.pricesnap.ui.BackendStatus.Connected -> Triple(Color(0xFF34D399), Color(0xFF10B981), "Online")
                         is dev.lukeponga.pricesnap.ui.BackendStatus.Checking -> Triple(Color(0xFFFBBF24), Color(0xFFF59E0B), "Checking")
@@ -209,9 +209,9 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                 }
                 // Loading / Analyzing state
                 uiState is AppraisalUiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color(0xFF10B981))
-                    }
+                    ScanningScreen(
+                        backendStatus = backendStatus
+                    )
                 }
                 // Otherwise navigate tabs normally
                 else -> {
