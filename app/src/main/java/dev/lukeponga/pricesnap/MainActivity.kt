@@ -152,13 +152,14 @@ fun MainContainer(viewModel: AppraisalViewModel) {
         },
         bottomBar = {
             Surface(
-                color = Color(0xFF031612),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF07271F))
+                color = Color(0xFF031612).copy(alpha = 0.85f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF07271F).copy(alpha = 0.8f)),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 NavigationBar(
-                    containerColor = Color(0xFF031612),
+                    containerColor = Color.Transparent,
                     tonalElevation = 0.dp,
-                    modifier = Modifier.height(72.dp)
+                    modifier = Modifier.height(84.dp)
                 ) {
                     val items = listOf(
                         Triple("Home", R.drawable.ic_home, "Home"),
