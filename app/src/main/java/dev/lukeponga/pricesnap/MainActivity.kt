@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
 import dev.lukeponga.pricesnap.ui.AppraisalUiState
 import dev.lukeponga.pricesnap.ui.AppraisalViewModel
 import dev.lukeponga.pricesnap.ui.screens.*
@@ -141,20 +142,21 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                 modifier = Modifier.height(72.dp)
             ) {
                 val items = listOf(
-                    Triple("Home", Icons.Outlined.Home, Icons.Filled.Home),
-                    Triple("Scan", Icons.Outlined.PhotoCamera, Icons.Filled.PhotoCamera),
-                    Triple("History", Icons.Outlined.History, Icons.Filled.History),
-                    Triple("Settings", Icons.Outlined.Settings, Icons.Filled.Settings)
+                    Triple("Home", R.drawable.ic_home, "Home"),
+                    Triple("Scan", R.drawable.ic_scan, "Scan"),
+                    Triple("History", R.drawable.ic_history, "History"),
+                    Triple("Settings", R.drawable.ic_settings, "Settings")
                 )
 
-                items.forEachIndexed { index, (label, icon, selectedIcon) ->
+                items.forEachIndexed { index, (label, iconRes, contentDescription) ->
                     NavigationBarItem(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
                         icon = {
                             Icon(
-                                imageVector = if (selectedTab == index) selectedIcon else icon,
-                                contentDescription = label
+                                painter = painterResource(id = iconRes),
+                                contentDescription = contentDescription,
+                                modifier = Modifier.size(24.dp)
                             )
                         },
                         label = { Text(label) },
@@ -163,7 +165,7 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                             selectedTextColor = Color(0xFF10B981),
                             unselectedIconColor = Color(0xFF9CA3AF),
                             unselectedTextColor = Color(0xFF9CA3AF),
-                            indicatorColor = Color.Transparent
+                            indicatorColor = Color(0xFF1E2224)
                         )
                     )
                 }
@@ -220,7 +222,8 @@ fun PriceSnapAppTheme(content: @Composable () -> Unit) {
         colorScheme = darkColorScheme(
             background = Color(0xFF121212),
             surface = Color(0xFF1E2224),
-            primary = Color(0xFF10B981)
+            primary = Color(0xFF10B981),
+            secondary = Color(0xFF10B981)
         ),
         content = content
     )

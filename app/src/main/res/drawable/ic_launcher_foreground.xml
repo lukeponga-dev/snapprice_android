@@ -1,8 +1,50 @@
-<?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="66dp"
-        android:height="66dp"
-        android:drawable="@drawable/price_snap_icon_1789484478410"
-        android:gravity="center" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    
+    <!-- Camera Body Silhouette -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M160,140 H200 L220,110 H292 L312,140 H352 C387.35,140 416,168.65 416,204 V356 C416,391.35 387.35,420 352,420 H160 C124.65,420 96,391.35 96,356 V204 C96,168.65 124.65,140 160,140 Z"/>
+
+    <!-- Camera Lens Outer Ring -->
+    <path
+        android:fillColor="#FF121212"
+        android:pathData="M256,196 C303.39,196 342,234.61 342,282 C342,329.39 303.39,368 256,368 C208.61,368 170,329.39 170,282 C170,234.61 208.61,196 256,196 Z"/>
+
+    <!-- Camera Lens Inner Core -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M256,236 C281.405,236 302,256.595 302,282 C302,307.405 281.405,328 256,328 C230.595,328 210,307.405 210,282 C210,256.595 230.595,236 256,236 Z"/>
+
+    <!-- Lens Specular Highlight Dot -->
+    <path
+        android:fillColor="#FF121212"
+        android:pathData="M266,272 C270.418,272 274,275.582 274,280 C274,284.418 270.418,288 266,288 C261.582,288 258,284.418 258,280 C258,275.582 261.582,272 266,272 Z"/>
+
+    <!-- Small Flash / Viewfinder Rect -->
+    <path
+        android:fillColor="#FF121212"
+        android:pathData="M136,176 H176 V196 H136 Z"/>
+
+    <!-- Emerald Price Tag Accent -->
+    <path
+        android:fillColor="#FF10B981"
+        android:pathData="M375.12,185.34 L306.46,254 C300.6,259.86 300.6,269.36 306.46,275.22 L320.78,289.54 C326.64,295.4 336.14,295.4 342,289.54 L410.66,220.88 C418.05,213.49 421.3,203.02 419.26,192.83 L413.67,164.88 C411.39,153.48 401.52,145 389.92,145.02 L362,145.42 C351.81,143.38 341.34,146.63 333.95,154.02 Z"/>
+
+    <!-- Price Tag Punch Hole -->
+    <path
+        android:fillColor="#FF121212"
+        android:pathData="M384,178 C389.523,178 394,173.523 394,168 C394,162.477 389.523,158 384,158 C378.477,158 374,162.477 374,168 C374,173.523 378.477,178 384,178 Z"/>
+
+    <!-- AI Sparkle / Star Accent -->
+    <path
+        android:fillColor="#FF06B6D4"
+        android:pathData="M428,198 C428,215.673 413.673,230 396,230 C413.673,230 428,244.327 428,262 C428,244.327 442.327,230 460,230 C442.327,230 428,215.673 428,198 Z"/>
+    
+    <path
+        android:fillColor="#FF10B981"
+        android:pathData="M428,190 C428,198.837 420.837,206 412,206 C420.837,206 428,213.163 428,222 C428,213.163 435.163,206 444,206 C435.163,206 428,198.837 428,190 Z"/>
+</vector>

@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lukeponga.pricesnap.model.AppraisalData
 
+import androidx.compose.ui.res.painterResource
+import dev.lukeponga.pricesnap.R
+
 @Composable
 fun ResultScreen(
     appraisal: AppraisalData,
@@ -66,13 +69,24 @@ fun ResultScreen(
                     shape = RoundedCornerShape(8.dp),
                     color = Color(0xFF3F1D26) // Dark red/amber tint for confidence pill
                 ) {
-                    Text(
-                        text = "$confidencePercent% CONFIDENCE",
-                        color = Color(0xFFF87171),
-                        style = MaterialTheme.typography.labelSmall,
+                    Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontWeight = FontWeight.Bold
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_sparkle),
+                            contentDescription = null,
+                            tint = Color(0xFFF87171),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = "$confidencePercent% CONFIDENCE",
+                            color = Color(0xFFF87171),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -212,11 +226,22 @@ fun ResultScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 val trend = appraisal.market?.trend ?: "stable"
-                Text(
-                    text = "— Market trend: ${trend.replaceFirstChar { it.uppercase() }}",
-                    color = Color(0xFF9CA3AF),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_trends),
+                        contentDescription = null,
+                        tint = Color(0xFF9CA3AF),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Market trend: ${trend.replaceFirstChar { it.uppercase() }}",
+                        color = Color(0xFF9CA3AF),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
 

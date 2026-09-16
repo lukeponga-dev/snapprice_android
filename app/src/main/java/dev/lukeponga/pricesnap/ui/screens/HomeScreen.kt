@@ -23,6 +23,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.ui.res.painterResource
+import dev.lukeponga.pricesnap.R
+
 @Composable
 fun HomeScreen(
     totalScans: Int,
@@ -51,7 +54,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
-                    Icons.Default.AutoAwesome,
+                    painter = painterResource(id = R.drawable.ic_sparkle),
                     contentDescription = null,
                     tint = Color(0xFF10B981),
                     modifier = Modifier.size(14.dp)
@@ -73,7 +76,7 @@ fun HomeScreen(
             Text(
                 text = buildAnnotatedString {
                     append("Appraise Anything\n")
-                    withStyle(style = SpanStyle(color = Color(0xFF3B82F6))) {
+                    withStyle(style = SpanStyle(color = Color(0xFF10B981))) {
                         append("In Seconds")
                     }
                 },
@@ -105,31 +108,19 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                Text(text = "Scan Item", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_scan),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = "Scan Item",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
-        }
-
-        // 4. Metrics Grid Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            MetricCard(
-                value = "$totalScans",
-                label = "Total Scans",
-                icon = Icons.Default.TrendingUp,
-                iconColor = Color(0xFF10B981),
-                modifier = Modifier.weight(1f)
-            )
-
-            MetricCard(
-                value = "AI Appraisals",
-                label = "Smart estimates",
-                icon = Icons.Default.AutoAwesome,
-                iconColor = Color(0xFF3B82F6),
-                modifier = Modifier.weight(1f)
-            )
         }
 
         // 6. How it works
@@ -148,7 +139,12 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(Icons.Default.MenuBook, contentDescription = null, tint = Color(0xFF10B981))
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_book),
+                        contentDescription = null,
+                        tint = Color(0xFF10B981),
+                        modifier = Modifier.size(24.dp)
+                    )
                     Text(
                         text = "How PriceSnap Works",
                         fontWeight = FontWeight.Bold,

@@ -10,6 +10,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.res.painterResource
+import dev.lukeponga.pricesnap.R
+import dev.lukeponga.pricesnap.ui.components.PriceSnapTile
+
 @Composable
 fun SettingsScreen() {
     Column(
@@ -25,6 +29,23 @@ fun SettingsScreen() {
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
+
+        // Quick Actions Tiles
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            PriceSnapTile(
+                title = "Support",
+                iconPainter = painterResource(id = R.drawable.ic_history),
+                onClick = { /* Help */ }
+            )
+            PriceSnapTile(
+                title = "Privacy",
+                iconPainter = painterResource(id = R.drawable.ic_settings),
+                onClick = { /* Privacy */ }
+            )
+        }
 
         // Install App Card
         Card(
