@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -105,7 +106,15 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                     }
                 },
                 actions = {
-                    // Online status pill
+                    val backendStatus by viewModel.backendStatus.collectAsState()
+                    val (statusColor, dotColor, label) = when (backendStatus) {
+                        is dev.lukeponga.pricesnap.ui.BackendStatus.Connected -> Triple(Color(0xFF34D399), Color(0xFF10B981), "Online")
+                        is dev.lukeponga.pricesnap.ui.BackendStatus.Checking -> Triple(Color(0xFFFBBF24), Color(0xFFF59E0B), "Checking")
+                        is dev.lukeponga.pricesnap.ui.BackendStatus.Offline -> Triple(Color(0xFFF87171), Color(0xFFEF4444), "Offline")
+                        is dev.lukeponga.pricesnap.ui.BackendStatus.Error -> Triple(Color(0xFFF87171), Color(0xFFEF4444), "Degraded")
+                    }
+
+                    // Interactive status pill to re-check connection on click
                     Surface(
                         color = Color(0xFF07261E),
                         shape = RoundedCornerShape(16.dp),
@@ -113,6 +122,7 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                         modifier = Modifier
                             .padding(end = 16.dp)
                             .height(28.dp)
+                            .clickable { viewModel.checkBackendHealth() }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp),
@@ -123,12 +133,12 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF10B981))
+                                    .background(dotColor)
                             )
                             Text(
-                                text = "Online",
+                                text = label,
                                 fontSize = 12.sp,
-                                color = Color(0xFF34D399),
+                                color = statusColor,
                                 fontWeight = FontWeight.Medium
                             )
                         }

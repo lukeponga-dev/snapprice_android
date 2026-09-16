@@ -25,10 +25,41 @@ sealed class AppraisalUiState {
     data class Error(val message: String) : AppraisalUiState()
 }
 
+sealed class BackendStatus {
+    object Checking : BackendStatus()
+    object Connected : BackendStatus()
+    object Offline : BackendStatus()
+    data class Error(val msg: String) : BackendStatus()
+}
+
 class AppraisalViewModel(private val repository: HistoryRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AppraisalUiState>(AppraisalUiState.Idle)
     val uiState: StateFlow<AppraisalUiState> = _uiState.asStateFlow()
+
+    // Backend connection status state
+    private val _backendStatus = MutableStateFlow<BackendStatus>(BackendStatus.Checking)
+    val backendStatus: StateFlow<BackendStatus> = _backendStatus.asStateFlow()
+
+    init {
+        checkBackendHealth()
+    }
+
+    fun checkBackendHealth() {
+        viewModelScope.launch {
+            _backendStatus.value = BackendStatus.Checking
+            try {
+                val response = NetworkClient.apiService.ping()
+                if (response.isSuccessful && response.body()?.status == "ok") {
+                    _backendStatus.value = BackendStatus.Connected
+                } else {
+                    _backendStatus.value = BackendStatus.Error("Degraded (${response.code()})")
+                }
+            } catch (e: Exception) {
+                _backendStatus.value = BackendStatus.Offline
+            }
+        }
+    }
 
     val history: StateFlow<List<HistoryEntity>> = repository.allHistory
         .stateIn(
