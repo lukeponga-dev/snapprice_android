@@ -6,6 +6,12 @@ data class ImageRequest(
     @SerializedName("image") val image: String
 )
 
+data class PingResponse(
+    @SerializedName("status") val status: String,
+    @SerializedName("service") val service: String,
+    @SerializedName("timestamp") val timestamp: Long
+)
+
 data class AppraisalResponse(
     @SerializedName("ok") val ok: Boolean,
     @SerializedName("appraisal") val appraisal: AppraisalData?
