@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,6 +56,7 @@ class MainActivity : ComponentActivity() {
 fun MainContainer(viewModel: AppraisalViewModel) {
     var selectedTab by remember { mutableStateOf(0) }
     val uiState by viewModel.uiState.collectAsState()
+    val historyList by viewModel.history.collectAsState()
 
     Scaffold(
         topBar = {
@@ -63,13 +66,13 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                         Text(
                             text = when (selectedTab) {
                                 0 -> "Home"
-                                1 -> "Scan"
+                                1 -> "Scan item"
                                 2 -> "History"
                                 3 -> "Settings"
                                 else -> ""
                             },
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color.White
                         )
                     }
@@ -79,95 +82,102 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                     Box(
                         modifier = Modifier
                             .padding(start = 16.dp)
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1E2224)),
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF131E1B))
+                            .border(androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E332C)), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.PhotoCamera,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Box(
                             modifier = Modifier
-                                .size(6.dp)
+                                .padding(top = 4.dp, end = 4.dp)
+                                .size(7.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFF97316))
+                                .background(Color(0xFFFB923C))
                                 .align(Alignment.TopEnd)
-                                .offset(x = 1.dp, y = (-1).dp)
                         )
                     }
                 },
                 actions = {
                     // Online status pill
                     Surface(
-                        color = Color(0xFF1E2224),
-                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF07261E),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0E4336)),
                         modifier = Modifier
                             .padding(end = 16.dp)
-                            .height(24.dp)
+                            .height(28.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(4.dp)
+                                    .size(6.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFF10B981))
                             )
                             Text(
                                 text = "Online",
-                                fontSize = 10.sp,
-                                color = Color(0xFF10B981),
+                                fontSize = 12.sp,
+                                color = Color(0xFF34D399),
                                 fontWeight = FontWeight.Medium
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF121212),
+                    containerColor = Color(0xFF000000),
                     titleContentColor = Color.White
                 )
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = Color(0xFF181A1B),
-                tonalElevation = 0.dp,
-                modifier = Modifier.height(72.dp)
+            Surface(
+                color = Color(0xFF031612),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF07271F))
             ) {
-                val items = listOf(
-                    Triple("Home", R.drawable.ic_home, "Home"),
-                    Triple("Scan", R.drawable.ic_scan, "Scan"),
-                    Triple("History", R.drawable.ic_history, "History"),
-                    Triple("Settings", R.drawable.ic_settings, "Settings")
-                )
-
-                items.forEachIndexed { index, (label, iconRes, contentDescription) ->
-                    NavigationBarItem(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        icon = {
-                            Icon(
-                                painter = painterResource(id = iconRes),
-                                contentDescription = contentDescription,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        label = { Text(label) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF10B981),
-                            selectedTextColor = Color(0xFF10B981),
-                            unselectedIconColor = Color(0xFF9CA3AF),
-                            unselectedTextColor = Color(0xFF9CA3AF),
-                            indicatorColor = Color(0xFF1E2224)
-                        )
+                NavigationBar(
+                    containerColor = Color(0xFF031612),
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.height(72.dp)
+                ) {
+                    val items = listOf(
+                        Triple("Home", R.drawable.ic_home, "Home"),
+                        Triple("Scan", R.drawable.ic_scan, "Scan"),
+                        Triple("History", R.drawable.ic_history, "History"),
+                        Triple("Settings", R.drawable.ic_settings, "Settings")
                     )
+
+                    items.forEachIndexed { index, (label, iconRes, contentDescription) ->
+                        NavigationBarItem(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(id = iconRes),
+                                    contentDescription = contentDescription,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            },
+                            label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color(0xFF34D399),
+                                selectedTextColor = Color(0xFF34D399),
+                                unselectedIconColor = Color(0xFF62A894),
+                                unselectedTextColor = Color(0xFF62A894),
+                                indicatorColor = Color(0xFF223354)
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -176,7 +186,7 @@ fun MainContainer(viewModel: AppraisalViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            color = Color(0xFF121212)
+            color = Color(0xFF000000)
         ) {
             when {
                 // If model returned a success appraisal result, override view to ResultScreen
@@ -197,7 +207,7 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                 else -> {
                     when (selectedTab) {
                         0 -> HomeScreen(
-                            totalScans = 0,
+                            totalScans = historyList.size,
                             onNavigateToScan = { selectedTab = 1 }
                         )
                         1 -> ScanScreen(
@@ -205,10 +215,13 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                             onScanCompleted = {}
                         )
                         2 -> HistoryScreen(
-                            hasScans = false,
+                            hasScans = historyList.isNotEmpty(),
+                            historyItems = historyList,
                             onStartScanning = { selectedTab = 1 }
                         )
-                        3 -> SettingsScreen()
+                        3 -> SettingsScreen(
+                            onClearHistory = { viewModel.clearHistory() }
+                        )
                     }
                 }
             }
@@ -220,10 +233,10 @@ fun MainContainer(viewModel: AppraisalViewModel) {
 fun PriceSnapAppTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = darkColorScheme(
-            background = Color(0xFF121212),
-            surface = Color(0xFF1E2224),
+            background = Color(0xFF000000),
+            surface = Color(0xFF0C1D19),
             primary = Color(0xFF10B981),
-            secondary = Color(0xFF10B981)
+            secondary = Color(0xFF34D399)
         ),
         content = content
     )

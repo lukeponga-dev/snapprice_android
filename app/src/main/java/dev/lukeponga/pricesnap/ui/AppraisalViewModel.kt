@@ -99,6 +99,12 @@ class AppraisalViewModel(private val repository: HistoryRepository) : ViewModel(
         _uiState.value = AppraisalUiState.Idle
     }
 
+    fun clearHistory() {
+        viewModelScope.launch {
+            repository.clearAllHistory()
+        }
+    }
+
     class Factory(private val repository: HistoryRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(AppraisalViewModel::class.java)) {

@@ -2,12 +2,14 @@ package dev.lukeponga.pricesnap.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,6 +21,7 @@ import dev.lukeponga.pricesnap.model.AppraisalData
 import androidx.compose.ui.res.painterResource
 import dev.lukeponga.pricesnap.R
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ResultScreen(
     appraisal: AppraisalData,
@@ -30,21 +33,22 @@ fun ResultScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212))
+            .background(Color(0xFF000000))
             .verticalScroll(scrollState)
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // 1. Product Identification Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2224))
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1D19)),
+            border = BorderStroke(1.dp, Color(0xFF143029))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -64,25 +68,26 @@ fun ResultScreen(
                 }
 
                 // Confidence Badge
-                val confidencePercent = ((appraisal.confidence ?: 0.0) * 100).toInt()
+                val confidencePercent = remember(appraisal.confidence) { ((appraisal.confidence ?: 0.0) * 100).toInt() }
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFF3F1D26) // Dark red/amber tint for confidence pill
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFF072A20),
+                    border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_sparkle),
                             contentDescription = null,
-                            tint = Color(0xFFF87171),
-                            modifier = Modifier.size(12.dp)
+                            tint = Color(0xFF34D399),
+                            modifier = Modifier.size(14.dp)
                         )
                         Text(
                             text = "$confidencePercent% CONFIDENCE",
-                            color = Color(0xFFF87171),
+                            color = Color(0xFF34D399),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -94,8 +99,9 @@ fun ResultScreen(
         // 2. Condition & Defects Assessment Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2224))
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1D19)),
+            border = BorderStroke(1.dp, Color(0xFF143029))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -106,8 +112,9 @@ fun ResultScreen(
                     Column {
                         Text(
                             text = "CONDITION",
-                            color = Color(0xFF9CA3AF),
-                        style = MaterialTheme.typography.labelSmall
+                            color = Color(0xFF6B8078),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
@@ -126,10 +133,10 @@ fun ResultScreen(
                         }
                         
                         // Condition Grade Badge
-                        val grade = appraisal.product?.conditionGrade ?: "B"
+                        val grade = remember(appraisal.product?.conditionGrade) { appraisal.product?.conditionGrade ?: "B" }
                         Text(
                             text = "Grade $grade",
-                            color = Color(0xFF10B981),
+                            color = Color(0xFF34D399),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(top = 4.dp)
@@ -139,7 +146,7 @@ fun ResultScreen(
                     // Summary Description
                     Text(
                         text = appraisal.product?.summary ?: "No condition summary available.",
-                        color = Color(0xFFD1D5DB),
+                        color = Color(0xFF9CA3AF),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .weight(1f)
@@ -152,15 +159,19 @@ fun ResultScreen(
                 // Defect Chips
                 val defects = appraisal.defects ?: emptyList()
                 if (defects.isNotEmpty()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         defects.forEach { defect ->
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFF2D3748)
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFF072A20),
+                                border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                             ) {
                                 Text(
                                     text = defect.uppercase(),
-                                    color = Color(0xFFE2E8F0),
+                                    color = Color(0xFF34D399),
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                     fontWeight = FontWeight.Medium
@@ -175,8 +186,9 @@ fun ResultScreen(
         // 3. Recommended Resale Price & Strategy Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2224))
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1D19)),
+            border = BorderStroke(1.dp, Color(0xFF143029))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -187,13 +199,14 @@ fun ResultScreen(
                     Column {
                         Text(
                             text = "RECOMMENDED RESALE PRICE",
-                            color = Color(0xFF9CA3AF),
-                            style = MaterialTheme.typography.labelSmall
+                            color = Color(0xFF6B8078),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "$${appraisal.resalePriceNz ?: 0}",
-                            color = Color(0xFF10B981),
+                            color = Color(0xFF22C55E),
                             fontSize = 30.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -202,17 +215,19 @@ fun ResultScreen(
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = "BEST PLATFORM",
-                            color = Color(0xFF9CA3AF),
-                            style = MaterialTheme.typography.labelSmall
+                            color = Color(0xFF6B8078),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF2D3748)
+                            color = Color(0xFF072A20),
+                            border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                         ) {
                             Text(
                                 text = appraisal.market?.bestPlatform ?: "Trade Me",
-                                color = Color.White,
+                                color = Color(0xFF34D399),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -222,7 +237,7 @@ fun ResultScreen(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = Color(0xFF2D3748))
+                HorizontalDivider(color = Color(0xFF143029))
                 Spacer(modifier = Modifier.height(12.dp))
 
                 val trend = appraisal.market?.trend ?: "stable"
@@ -248,16 +263,18 @@ fun ResultScreen(
         // 4. Marketplace Comparison Section
         Text(
             text = "MARKETPLACE COMPARISONS (NZD)",
-            color = Color(0xFF9CA3AF),
+            color = Color(0xFF6B8078),
             style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(top = 4.dp)
         )
 
         val trademe = appraisal.market?.trademe
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2224))
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1D19)),
+            border = BorderStroke(1.dp, Color(0xFF143029))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -273,7 +290,8 @@ fun ResultScreen(
                     )
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = Color(0xFF064E3B)
+                        color = Color(0xFF072A20),
+                        border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                     ) {
                         Text(
                             text = "$${trademe?.median ?: 0} avg",
@@ -308,10 +326,13 @@ fun ResultScreen(
                 onClick = onScanAgain,
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, Color(0xFF374151)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, Color(0xFF15382E)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color(0xFF0C1D19),
+                    contentColor = Color.White
+                )
             ) {
                 Text("Scan Again", fontWeight = FontWeight.SemiBold)
             }
@@ -320,11 +341,11 @@ fun ResultScreen(
                 onClick = onSaveResult,
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E))
             ) {
-                Text("Save Result", fontWeight = FontWeight.SemiBold, color = Color.White)
+                Text("Save Result", fontWeight = FontWeight.Bold, color = Color(0xFF042116))
             }
         }
     }

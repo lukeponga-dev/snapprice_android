@@ -20,4 +20,8 @@ class HistoryRepository(
     suspend fun deleteFromHistory(entity: HistoryEntity) {
         historyDao.deleteHistory(entity)
     }
+
+    suspend fun clearAllHistory() {
+        historyDao.clearHistory()
+    }
 }
