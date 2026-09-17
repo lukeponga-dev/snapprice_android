@@ -17,8 +17,8 @@ android {
     applicationId = "dev.lukeponga.pricesnap"
     minSdk = 26
     targetSdk = 36
-    versionCode = 4
-    versionName = "3.1"
+    versionCode = 5
+    versionName = "1.1.2 beta"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
