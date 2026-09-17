@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContainer(viewModel: AppraisalViewModel) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val uiState by viewModel.uiState.collectAsState()
     val historyList by viewModel.history.collectAsState()
     val backendStatus by viewModel.backendStatus.collectAsState()
@@ -84,12 +84,7 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                             .border(androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E332C)), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.PhotoCamera,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Icon(Icons.Default.PhotoCamera, null, tint = Color.White, modifier = Modifier.size(20.dp))
                         Box(
                             modifier = Modifier
                                 .padding(top = 4.dp, end = 4.dp)
@@ -107,123 +102,91 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                         is dev.lukeponga.pricesnap.ui.BackendStatus.Offline -> Triple(Color(0xFFF87171), Color(0xFFEF4444), "Offline")
                         is dev.lukeponga.pricesnap.ui.BackendStatus.Error -> Triple(Color(0xFFF87171), Color(0xFFEF4444), "Degraded")
                     }
-
                     Surface(
                         color = Color(0xFF07261E),
                         shape = RoundedCornerShape(16.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0E4336)),
-                        modifier = Modifier
-                            .padding(end = if (compactWidth) 10.dp else 16.dp)
-                            .height(28.dp)
-                            .clickable { viewModel.checkBackendHealth() }
+                        modifier = Modifier.padding(end = if (compactWidth) 10.dp else 16.dp).height(28.dp).clickable { viewModel.checkBackendHealth() }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = if (compactWidth) 9.dp else 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(dotColor)
-                            )
-                            if (!compactWidth) {
-                                Text(
-                                    text = label,
-                                    fontSize = 12.sp,
-                                    color = statusColor,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                            Box(Modifier.size(6.dp).clip(CircleShape).background(dotColor))
+                            if (!compactWidth) Text(label, fontSize = 12.sp, color = statusColor, fontWeight = FontWeight.Medium)
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black, titleContentColor = Color.White)
             )
         },
         bottomBar = {
-            Surface(
-                color = Color(0xFF031612).copy(alpha = 0.85f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF07271F).copy(alpha = 0.8f)),
-                modifier = Modifier.fillMaxWidth()
+            NavigationBar(
+                containerColor = Color(0xFF031612),
+                tonalElevation = 0.dp,
+                windowInsets = NavigationBarDefaults.windowInsets,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(width = 1.dp, color = Color(0xFF07271F))
             ) {
-                NavigationBar(
-                    containerColor = Color.Transparent,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier.height(if (compactWidth) 76.dp else 84.dp)
-                ) {
-                    val items = listOf(
-                        Triple("Home", R.drawable.ic_home, "Home"),
-                        Triple("Scan", R.drawable.ic_scan, "Scan"),
-                        Triple("History", R.drawable.ic_history, "History"),
-                        Triple("Settings", R.drawable.ic_settings, "Settings")
-                    )
+                val items = listOf(
+                    Triple("Home", R.drawable.ic_home, "Home"),
+                    Triple("Scan", R.drawable.ic_scan, "Scan"),
+                    Triple("History", R.drawable.ic_history, "History"),
+                    Triple("Settings", R.drawable.ic_settings, "Settings")
+                )
 
-                    items.forEachIndexed { index, (label, iconRes, contentDescription) ->
-                        NavigationBarItem(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
-                            icon = {
-                                Icon(
-                                    painter = painterResource(id = iconRes),
-                                    contentDescription = contentDescription,
-                                    modifier = Modifier.size(if (compactWidth) 22.dp else 24.dp)
-                                )
-                            },
-                            label = {
-                                if (!compactWidth) {
-                                    Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
-                                }
-                            },
-                            alwaysShowLabel = !compactWidth,
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color(0xFF34D399),
-                                selectedTextColor = Color(0xFF34D399),
-                                unselectedIconColor = Color(0xFF62A894),
-                                unselectedTextColor = Color(0xFF62A894),
-                                indicatorColor = Color(0xFF223354)
+                items.forEachIndexed { index, (label, iconRes, contentDescription) ->
+                    NavigationBarItem(
+                        selected = selectedTab == index,
+                        onClick = {
+                            viewModel.resetState()
+                            selectedTab = index
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = iconRes),
+                                contentDescription = contentDescription,
+                                modifier = Modifier.size(if (compactWidth) 22.dp else 24.dp)
                             )
+                        },
+                        label = { Text(label, fontSize = if (compactWidth) 10.sp else 12.sp, maxLines = 1) },
+                        alwaysShowLabel = true,
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF34D399),
+                            selectedTextColor = Color(0xFF34D399),
+                            unselectedIconColor = Color(0xFF62A894),
+                            unselectedTextColor = Color(0xFF62A894),
+                            indicatorColor = Color(0xFF0E3D31)
                         )
-                    }
+                    )
                 }
             }
         }
     ) { innerPadding ->
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
             color = Color.Black
         ) {
             when {
-                uiState is AppraisalUiState.Success -> {
-                    ResultScreen(
-                        appraisal = (uiState as AppraisalUiState.Success).appraisal,
-                        onScanAgain = { viewModel.resetState() },
-                        onSaveResult = { viewModel.resetState() }
-                    )
-                }
-                uiState is AppraisalUiState.Loading -> {
-                    ScanningScreen(backendStatus = backendStatus)
-                }
-                else -> {
-                    when (selectedTab) {
-                        0 -> HomeScreen(
-                            totalScans = historyList.size,
-                            onNavigateToScan = { selectedTab = 1 }
-                        )
-                        1 -> ScanScreen(viewModel = viewModel, onScanCompleted = {})
-                        2 -> HistoryScreen(
-                            hasScans = historyList.isNotEmpty(),
-                            historyItems = historyList,
-                            onStartScanning = { selectedTab = 1 }
-                        )
-                        3 -> SettingsScreen(onClearHistory = { viewModel.clearHistory() })
+                uiState is AppraisalUiState.Success -> ResultScreen(
+                    appraisal = (uiState as AppraisalUiState.Success).appraisal,
+                    onScanAgain = {
+                        viewModel.resetState()
+                        selectedTab = 1
+                    },
+                    onSaveResult = {
+                        viewModel.resetState()
+                        selectedTab = 2
                     }
+                )
+                uiState is AppraisalUiState.Loading -> ScanningScreen(backendStatus = backendStatus)
+                else -> when (selectedTab) {
+                    0 -> HomeScreen(totalScans = historyList.size, onNavigateToScan = { selectedTab = 1 })
+                    1 -> ScanScreen(viewModel = viewModel, onScanCompleted = {})
+                    2 -> HistoryScreen(hasScans = historyList.isNotEmpty(), historyItems = historyList, onStartScanning = { selectedTab = 1 })
+                    3 -> SettingsScreen(onClearHistory = { viewModel.clearHistory() })
                 }
             }
         }
