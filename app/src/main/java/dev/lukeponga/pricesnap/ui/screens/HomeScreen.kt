@@ -31,150 +31,170 @@ fun HomeScreen(
 ) {
     val scrollState = rememberScrollState()
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF000000))
-            .verticalScroll(scrollState)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(22.dp)
+            .background(Color.Black)
     ) {
-        // 1. Audience Tag Pill
-        Surface(
-            shape = CircleShape,
-            color = Color(0xFF072A20),
-            border = BorderStroke(1.dp, Color(0xFF0F4E3C)),
-            modifier = Modifier.padding(top = 4.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_sparkle),
-                    contentDescription = null,
-                    tint = Color(0xFF34D399),
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = "For op shops & individuals",
-                    color = Color(0xFF34D399),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+        val compact = maxWidth < 360.dp
+        val expanded = maxWidth >= 600.dp
+        val horizontalPadding = when {
+            expanded -> 32.dp
+            compact -> 16.dp
+            else -> 20.dp
+        }
+        val contentWidth = if (expanded) 720.dp else maxWidth
+        val titleSize = when {
+            expanded -> 44.sp
+            compact -> 31.sp
+            else -> 36.sp
+        }
+        val titleLineHeight = when {
+            expanded -> 52.sp
+            compact -> 38.sp
+            else -> 44.sp
         }
 
-        // 2. Main Title & Subtitle
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = buildAnnotatedString {
-                    append("Appraise anything\n")
-                    withStyle(style = SpanStyle(color = Color(0xFF22C55E))) {
-                        append("in seconds.")
-                    }
-                },
-                color = Color.White,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Normal,
-                lineHeight = 44.sp,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Fast, grounded price estimates for thrift finds, clothing, collectibles and second-hand goods.",
-                color = Color(0xFF9CA3AF),
-                fontSize = 15.sp,
-                lineHeight = 22.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 10.dp)
-            )
-        }
-
-        // 3. Primary Action: "Scan an item"
-        Button(
-            onClick = onNavigateToScan,
             modifier = Modifier
+                .align(Alignment.TopCenter)
+                .widthIn(max = contentWidth)
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(22.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E))
+                .verticalScroll(scrollState)
+                .padding(horizontal = horizontalPadding, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(if (compact) 18.dp else 22.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            Surface(
+                shape = CircleShape,
+                color = Color(0xFF072A20),
+                border = BorderStroke(1.dp, Color(0xFF0F4E3C)),
+                modifier = Modifier.padding(top = 4.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_scan),
-                    contentDescription = null,
-                    tint = Color(0xFF042116),
-                    modifier = Modifier.size(22.dp)
+                Row(
+                    modifier = Modifier.padding(
+                        horizontal = if (compact) 12.dp else 16.dp,
+                        vertical = 7.dp
+                    ),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_sparkle),
+                        contentDescription = null,
+                        tint = Color(0xFF34D399),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "For op shops & individuals",
+                        color = Color(0xFF34D399),
+                        fontSize = if (compact) 12.sp else 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = buildAnnotatedString {
+                        append("Appraise anything\n")
+                        withStyle(style = SpanStyle(color = Color(0xFF22C55E))) {
+                            append("in seconds.")
+                        }
+                    },
+                    color = Color.White,
+                    fontSize = titleSize,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = titleLineHeight,
+                    textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Scan an item",
-                    color = Color(0xFF042116),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "Fast, grounded price estimates for thrift finds, clothing, collectibles and second-hand goods.",
+                    color = Color(0xFF9CA3AF),
+                    fontSize = if (expanded) 17.sp else 15.sp,
+                    lineHeight = if (expanded) 25.sp else 22.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .widthIn(max = 580.dp)
+                        .padding(horizontal = if (compact) 0.dp else 10.dp)
                 )
             }
-        }
 
-        // 4. "How PriceSnap works" Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1D19)),
-            border = BorderStroke(1.dp, Color(0xFF143029))
-        ) {
-            Column(
+            Button(
+                onClick = onNavigateToScan,
                 modifier = Modifier
-                    .padding(22.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .widthIn(max = 560.dp)
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp),
+                shape = RoundedCornerShape(22.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E)),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MonetizationOn,
+                        painter = painterResource(id = R.drawable.ic_scan),
                         contentDescription = null,
-                        tint = Color(0xFF10B981),
-                        modifier = Modifier.size(24.dp)
+                        tint = Color(0xFF042116),
+                        modifier = Modifier.size(22.dp)
                     )
                     Text(
-                        text = "How PriceSnap works",
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
-                        fontSize = 18.sp
-                    )
-                }
-
-                Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                    HowItWorksStep(
-                        number = "1",
-                        title = "Snap the details",
-                        description = "Capture the item, label, tag or hallmark."
-                    )
-                    HowItWorksStep(
-                        number = "2",
-                        title = "AI checks the market",
-                        description = "PriceSnap compares visual details with resale signals."
-                    )
-                    HowItWorksStep(
-                        number = "3",
-                        title = "Review your estimate",
-                        description = "See an NZD range, confidence and condition notes."
+                        text = "Scan an item",
+                        color = Color(0xFF042116),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier
+                    .widthIn(max = 720.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1D19)),
+                border = BorderStroke(1.dp, Color(0xFF143029))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(if (compact) 18.dp else 22.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MonetizationOn,
+                            contentDescription = null,
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "How PriceSnap works",
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        HowItWorksStep("1", "Snap the details", "Capture the item, label, tag or hallmark.")
+                        HowItWorksStep("2", "AI checks the market", "PriceSnap compares visual details with resale signals.")
+                        HowItWorksStep("3", "Review your estimate", "See an NZD range, confidence and condition notes.")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }
 
