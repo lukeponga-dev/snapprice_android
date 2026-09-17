@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,25 +12,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.painterResource
 import dev.lukeponga.pricesnap.ui.AppraisalUiState
 import dev.lukeponga.pricesnap.ui.AppraisalViewModel
 import dev.lukeponga.pricesnap.ui.screens.*
@@ -59,6 +51,8 @@ fun MainContainer(viewModel: AppraisalViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     val historyList by viewModel.history.collectAsState()
     val backendStatus by viewModel.backendStatus.collectAsState()
+    val configuration = LocalConfiguration.current
+    val compactWidth = configuration.screenWidthDp < 360
 
     Scaffold(
         topBar = {
@@ -75,16 +69,16 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = Color.White,
+                            maxLines = 1
                         )
                     }
                 },
                 navigationIcon = {
-                    // App Logo with orange dot
                     Box(
                         modifier = Modifier
-                            .padding(start = 16.dp)
-                            .size(40.dp)
+                            .padding(start = if (compactWidth) 10.dp else 16.dp)
+                            .size(if (compactWidth) 36.dp else 40.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF131E1B))
                             .border(androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E332C)), RoundedCornerShape(12.dp)),
@@ -114,18 +108,17 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                         is dev.lukeponga.pricesnap.ui.BackendStatus.Error -> Triple(Color(0xFFF87171), Color(0xFFEF4444), "Degraded")
                     }
 
-                    // Interactive status pill to re-check connection on click
                     Surface(
                         color = Color(0xFF07261E),
                         shape = RoundedCornerShape(16.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0E4336)),
                         modifier = Modifier
-                            .padding(end = 16.dp)
+                            .padding(end = if (compactWidth) 10.dp else 16.dp)
                             .height(28.dp)
                             .clickable { viewModel.checkBackendHealth() }
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp),
+                            modifier = Modifier.padding(horizontal = if (compactWidth) 9.dp else 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -135,17 +128,19 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                                     .clip(CircleShape)
                                     .background(dotColor)
                             )
-                            Text(
-                                text = label,
-                                fontSize = 12.sp,
-                                color = statusColor,
-                                fontWeight = FontWeight.Medium
-                            )
+                            if (!compactWidth) {
+                                Text(
+                                    text = label,
+                                    fontSize = 12.sp,
+                                    color = statusColor,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF000000),
+                    containerColor = Color.Black,
                     titleContentColor = Color.White
                 )
             )
@@ -159,7 +154,7 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                 NavigationBar(
                     containerColor = Color.Transparent,
                     tonalElevation = 0.dp,
-                    modifier = Modifier.height(84.dp)
+                    modifier = Modifier.height(if (compactWidth) 76.dp else 84.dp)
                 ) {
                     val items = listOf(
                         Triple("Home", R.drawable.ic_home, "Home"),
@@ -176,10 +171,15 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                                 Icon(
                                     painter = painterResource(id = iconRes),
                                     contentDescription = contentDescription,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(if (compactWidth) 22.dp else 24.dp)
                                 )
                             },
-                            label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                            label = {
+                                if (!compactWidth) {
+                                    Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                                }
+                            },
+                            alwaysShowLabel = !compactWidth,
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = Color(0xFF34D399),
                                 selectedTextColor = Color(0xFF34D399),
@@ -197,10 +197,9 @@ fun MainContainer(viewModel: AppraisalViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            color = Color(0xFF000000)
+            color = Color.Black
         ) {
             when {
-                // If model returned a success appraisal result, override view to ResultScreen
                 uiState is AppraisalUiState.Success -> {
                     ResultScreen(
                         appraisal = (uiState as AppraisalUiState.Success).appraisal,
@@ -208,31 +207,22 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                         onSaveResult = { viewModel.resetState() }
                     )
                 }
-                // Loading / Analyzing state
                 uiState is AppraisalUiState.Loading -> {
-                    ScanningScreen(
-                        backendStatus = backendStatus
-                    )
+                    ScanningScreen(backendStatus = backendStatus)
                 }
-                // Otherwise navigate tabs normally
                 else -> {
                     when (selectedTab) {
                         0 -> HomeScreen(
                             totalScans = historyList.size,
                             onNavigateToScan = { selectedTab = 1 }
                         )
-                        1 -> ScanScreen(
-                            viewModel = viewModel,
-                            onScanCompleted = {}
-                        )
+                        1 -> ScanScreen(viewModel = viewModel, onScanCompleted = {})
                         2 -> HistoryScreen(
                             hasScans = historyList.isNotEmpty(),
                             historyItems = historyList,
                             onStartScanning = { selectedTab = 1 }
                         )
-                        3 -> SettingsScreen(
-                            onClearHistory = { viewModel.clearHistory() }
-                        )
+                        3 -> SettingsScreen(onClearHistory = { viewModel.clearHistory() })
                     }
                 }
             }
