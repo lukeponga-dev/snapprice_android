@@ -7,14 +7,15 @@ import androidx.lifecycle.viewModelScope
 import dev.lukeponga.pricesnap.history.HistoryEntity
 import dev.lukeponga.pricesnap.history.HistoryRepository
 import dev.lukeponga.pricesnap.model.AppraisalData
-import dev.lukeponga.pricesnap.model.ImageRequest
-import dev.lukeponga.pricesnap.network.NetworkClient
+import dev.lukeponga.pricesnap.network.AppraisalRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
 
@@ -27,76 +28,61 @@ sealed class AppraisalUiState {
 
 sealed class BackendStatus {
     object Checking : BackendStatus()
-    data class Connected(
-        val service: String,
-        val timestamp: Long
-    ) : BackendStatus()
+    data class Connected(val service: String, val timestamp: Long) : BackendStatus()
     object Offline : BackendStatus()
     data class Error(val msg: String) : BackendStatus()
 }
 
-class AppraisalViewModel(private val repository: HistoryRepository) : ViewModel() {
-
+class AppraisalViewModel(
+    private val repository: HistoryRepository,
+    private val appraisalRepository: AppraisalRepository = AppraisalRepository()
+) : ViewModel() {
     private val _uiState = MutableStateFlow<AppraisalUiState>(AppraisalUiState.Idle)
     val uiState: StateFlow<AppraisalUiState> = _uiState.asStateFlow()
 
-    // Backend connection status state
     private val _backendStatus = MutableStateFlow<BackendStatus>(BackendStatus.Checking)
     val backendStatus: StateFlow<BackendStatus> = _backendStatus.asStateFlow()
 
-    init {
-        checkBackendHealth()
-    }
+    val history: StateFlow<List<HistoryEntity>> = repository.allHistory.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    init { checkBackendHealth() }
 
     fun checkBackendHealth() {
-        viewModelScope.launch {
-            refreshBackendHealth()
-        }
+        viewModelScope.launch { refreshBackendHealth() }
     }
 
     private suspend fun refreshBackendHealth() {
         _backendStatus.value = BackendStatus.Checking
         try {
-            val response = NetworkClient.apiService.ping()
+            val response = appraisalRepository.ping()
             val ping = response.body()
-            if (response.isSuccessful && ping?.status == "ok") {
-                _backendStatus.value = BackendStatus.Connected(
-                    service = ping.service,
-                    timestamp = ping.timestamp
-                )
+            _backendStatus.value = if (response.isSuccessful && ping?.status == "ok") {
+                BackendStatus.Connected(ping.service, ping.timestamp)
             } else {
-                _backendStatus.value = BackendStatus.Error("Degraded (${response.code()})")
+                BackendStatus.Error("Backend returned HTTP ${response.code()}")
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             _backendStatus.value = BackendStatus.Offline
         }
     }
 
-    val history: StateFlow<List<HistoryEntity>> = repository.allHistory
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    /**
-     * Submits the Base64 image payload to the Vercel Edge backend and updates the UI state.
-     */
     fun analyzeCapturedImage(base64Image: String, imageFile: File? = null) {
         viewModelScope.launch {
             _uiState.value = AppraisalUiState.Loading
-            refreshBackendHealth()
             try {
-                val request = ImageRequest(image = base64Image)
-                val response = NetworkClient.apiService.analyzeItem(request)
-
+                // Do not block appraisal on a separate health-check request. A successful
+                // appraisal itself proves connectivity and avoids an unnecessary round trip.
+                val response = appraisalRepository.analyzeImage(base64Image)
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body?.ok == true && body.appraisal != null) {
                         val appraisal = body.appraisal
+                        _backendStatus.value = BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
                         _uiState.value = AppraisalUiState.Success(appraisal)
-                        
-                        // Save to history if we have a file reference
                         imageFile?.let { file ->
                             repository.saveToHistory(
                                 HistoryEntity(
@@ -112,40 +98,43 @@ class AppraisalViewModel(private val repository: HistoryRepository) : ViewModel(
                             )
                         }
                     } else {
-                        _uiState.value = AppraisalUiState.Error("Invalid appraisal response structure.")
+                        _uiState.value = AppraisalUiState.Error("We couldn't read the appraisal result. Please try again.")
                     }
                 } else {
-                    val errorMsg = when (response.code()) {
-                        400 -> "Missing image payload (400 NO_IMAGE)"
-                        413 -> "Image exceeds 15MB limit (413 IMAGE_TOO_LARGE)"
-                        502 -> "AI Studio gateway unreachable (502 AI_STUDIO_UNREACHABLE)"
-                        else -> "Server error: ${response.code()}"
-                    }
-                    _uiState.value = AppraisalUiState.Error(errorMsg)
+                    _uiState.value = AppraisalUiState.Error(userMessageFor(response.code()))
                 }
-            } catch (e: Exception) {
-                _uiState.value = AppraisalUiState.Error(e.localizedMessage ?: "Network connection failed.")
+            } catch (_: Exception) {
+                _backendStatus.value = BackendStatus.Offline
+                _uiState.value = AppraisalUiState.Error("We couldn't connect to PriceSnap. Check your connection and try again.")
             }
         }
     }
 
-    /**
-     * Helper for gallery uploads.
-     */
-    fun appraiseImage(imageFile: File) {
-        val bytes = imageFile.readBytes()
-        val base64Image = "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
-        analyzeCapturedImage(base64Image, imageFile)
+    private fun userMessageFor(code: Int): String = when (code) {
+        400 -> "We couldn't read that image. Please choose another photo and try again."
+        413 -> "That photo is too large. Please choose a smaller image and try again."
+        502, 503, 504 -> "The appraisal service is temporarily unavailable. Please try again shortly."
+        else -> "The appraisal couldn't be completed (HTTP $code). Please try again."
     }
 
-    fun resetState() {
-        _uiState.value = AppraisalUiState.Idle
+    fun appraiseImage(imageFile: File) {
+        viewModelScope.launch {
+            try {
+                val base64Image = withContext(Dispatchers.IO) {
+                    val bytes = imageFile.readBytes()
+                    "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                }
+                analyzeCapturedImage(base64Image, imageFile)
+            } catch (_: Exception) {
+                _uiState.value = AppraisalUiState.Error("We couldn't open that photo. Please choose another image.")
+            }
+        }
     }
+
+    fun resetState() { _uiState.value = AppraisalUiState.Idle }
 
     fun clearHistory() {
-        viewModelScope.launch {
-            repository.clearAllHistory()
-        }
+        viewModelScope.launch { repository.clearAllHistory() }
     }
 
     class Factory(private val repository: HistoryRepository) : ViewModelProvider.Factory {
