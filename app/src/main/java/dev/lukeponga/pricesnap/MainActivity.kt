@@ -27,11 +27,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lukeponga.pricesnap.ui.AppraisalUiState
 import dev.lukeponga.pricesnap.ui.AppraisalViewModel
+import dev.lukeponga.pricesnap.ui.AuthViewModel
 import dev.lukeponga.pricesnap.ui.screens.*
 
 class MainActivity : ComponentActivity() {
     private val viewModel: AppraisalViewModel by viewModels {
-        AppraisalViewModel.Factory((application as PriceSnapApp).repository)
+        val app = application as PriceSnapApp
+        AppraisalViewModel.Factory(app.repository, app.scanPreferenceManager)
+    }
+    private val authViewModel: AuthViewModel by viewModels {
+        AuthViewModel.Factory((application as PriceSnapApp).authManager)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +44,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PriceSnapAppTheme {
-                MainContainer(viewModel = viewModel)
+                val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+                val isGuestMode by authViewModel.isGuestMode.collectAsState()
+                
+                if (isLoggedIn || isGuestMode) {
+                    MainContainer(viewModel = viewModel, authViewModel = authViewModel)
+                } else {
+                    AuthScreen(viewModel = authViewModel)
+                }
             }
         }
     }
@@ -47,15 +59,24 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContainer(viewModel: AppraisalViewModel) {
+fun MainContainer(viewModel: AppraisalViewModel, authViewModel: AuthViewModel) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val uiState by viewModel.uiState.collectAsState()
     val historyList by viewModel.history.collectAsState()
     val backendStatus by viewModel.backendStatus.collectAsState()
     val configuration = LocalConfiguration.current
     val compactWidth = configuration.screenWidthDp < 360
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState) {
+        if (uiState is AppraisalUiState.Error) {
+            snackbarHostState.showSnackbar((uiState as AppraisalUiState.Error).message)
+            viewModel.resetState()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -185,9 +206,24 @@ fun MainContainer(viewModel: AppraisalViewModel) {
                 uiState is AppraisalUiState.Loading -> ScanningScreen(backendStatus = backendStatus)
                 else -> when (selectedTab) {
                     0 -> HomeScreen(totalScans = historyList.size, onNavigateToScan = { selectedTab = 1 })
-                    1 -> ScanScreen(viewModel = viewModel, onScanCompleted = {})
+                    1 -> {
+                        val isGuest by authViewModel.isGuestMode.collectAsState()
+                        ScanScreen(viewModel = viewModel, isGuest = isGuest, onScanCompleted = {})
+                    }
                     2 -> HistoryScreen(hasScans = historyList.isNotEmpty(), historyItems = historyList, onStartScanning = { selectedTab = 1 })
-                    3 -> SettingsScreen(onClearHistory = { viewModel.clearHistory() })
+                    3 -> {
+                        val userEmail by authViewModel.userEmail.collectAsState()
+                        val isGuest by authViewModel.isGuestMode.collectAsState()
+                        val scanCount by viewModel.dailyScanCount.collectAsState()
+                        
+                        SettingsScreen(
+                            onClearHistory = { viewModel.clearHistory() },
+                            onLogout = { authViewModel.logout() },
+                            userEmail = userEmail,
+                            isGuest = isGuest,
+                            scanCount = scanCount
+                        )
+                    }
                 }
             }
         }

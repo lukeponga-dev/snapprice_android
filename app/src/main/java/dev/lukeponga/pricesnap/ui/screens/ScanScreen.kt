@@ -45,6 +45,7 @@ import java.io.FileOutputStream
 @Composable
 fun ScanScreen(
     viewModel: AppraisalViewModel,
+    isGuest: Boolean = false,
     onScanCompleted: () -> Unit
 ) {
     val context = LocalContext.current
@@ -77,8 +78,8 @@ fun ScanScreen(
                 inputStream?.copyTo(outputStream)
                 inputStream?.close()
                 outputStream.close()
-
-                viewModel.appraiseImage(file)
+                
+                viewModel.appraiseImage(file, isGuest)
                 onScanCompleted()
             }
         }
@@ -119,6 +120,7 @@ fun ScanScreen(
                     factory = { ctx ->
                         PreviewView(ctx).apply {
                             scaleType = PreviewView.ScaleType.FILL_CENTER
+                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                         }
                     },
                     update = { previewView ->
@@ -232,7 +234,7 @@ fun ScanScreen(
                             val bytes = android.util.Base64.decode(base64Image.substringAfter(","), android.util.Base64.DEFAULT)
                             file.writeBytes(bytes)
 
-                            viewModel.analyzeCapturedImage(base64Image, file)
+                            viewModel.analyzeCapturedImage(base64Image, file, isGuest)
                             onScanCompleted()
                         } catch (e: Exception) {
                             Toast.makeText(

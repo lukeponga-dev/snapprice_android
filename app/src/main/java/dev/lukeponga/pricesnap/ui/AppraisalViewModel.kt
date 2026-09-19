@@ -4,6 +4,7 @@ import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import dev.lukeponga.pricesnap.data.ScanPreferenceManager
 import dev.lukeponga.pricesnap.history.HistoryEntity
 import dev.lukeponga.pricesnap.history.HistoryRepository
 import dev.lukeponga.pricesnap.model.AppraisalData
@@ -35,6 +36,7 @@ sealed class BackendStatus {
 
 class AppraisalViewModel(
     private val repository: HistoryRepository,
+    private val scanPreferenceManager: ScanPreferenceManager,
     private val appraisalRepository: AppraisalRepository = AppraisalRepository()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AppraisalUiState>(AppraisalUiState.Idle)
@@ -47,6 +49,12 @@ class AppraisalViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
+    )
+
+    val dailyScanCount: StateFlow<Int> = scanPreferenceManager.dailyScanCount.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
     )
 
     init { checkBackendHealth() }
@@ -70,8 +78,13 @@ class AppraisalViewModel(
         }
     }
 
-    fun analyzeCapturedImage(base64Image: String, imageFile: File? = null) {
+    fun analyzeCapturedImage(base64Image: String, imageFile: File? = null, isGuest: Boolean = false) {
         viewModelScope.launch {
+            if (isGuest && dailyScanCount.value >= 10) {
+                _uiState.value = AppraisalUiState.Error("Daily scan limit reached for guests (10/day). Please sign in for unlimited scans!")
+                return@launch
+            }
+
             _uiState.value = AppraisalUiState.Loading
             try {
                 // Do not block appraisal on a separate health-check request. A successful
@@ -80,6 +93,9 @@ class AppraisalViewModel(
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body?.ok == true && body.appraisal != null) {
+                        if (isGuest) {
+                            scanPreferenceManager.incrementScanCount()
+                        }
                         val appraisal = body.appraisal
                         _backendStatus.value = BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
                         _uiState.value = AppraisalUiState.Success(appraisal)
@@ -117,14 +133,14 @@ class AppraisalViewModel(
         else -> "The appraisal couldn't be completed (HTTP $code). Please try again."
     }
 
-    fun appraiseImage(imageFile: File) {
+    fun appraiseImage(imageFile: File, isGuest: Boolean = false) {
         viewModelScope.launch {
             try {
                 val base64Image = withContext(Dispatchers.IO) {
                     val bytes = imageFile.readBytes()
                     "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
                 }
-                analyzeCapturedImage(base64Image, imageFile)
+                analyzeCapturedImage(base64Image, imageFile, isGuest)
             } catch (_: Exception) {
                 _uiState.value = AppraisalUiState.Error("We couldn't open that photo. Please choose another image.")
             }
@@ -137,11 +153,14 @@ class AppraisalViewModel(
         viewModelScope.launch { repository.clearAllHistory() }
     }
 
-    class Factory(private val repository: HistoryRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val repository: HistoryRepository,
+        private val scanPreferenceManager: ScanPreferenceManager
+    ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(AppraisalViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return AppraisalViewModel(repository) as T
+                return AppraisalViewModel(repository, scanPreferenceManager) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

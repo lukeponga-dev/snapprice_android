@@ -27,7 +27,11 @@ import androidx.compose.ui.window.Dialog
 
 @Composable
 fun SettingsScreen(
-    onClearHistory: () -> Unit = {}
+    onClearHistory: () -> Unit = {},
+    onLogout: () -> Unit = {},
+    userEmail: String? = null,
+    isGuest: Boolean = false,
+    scanCount: Int = 0
 ) {
     val scrollState = rememberScrollState()
 
@@ -88,6 +92,66 @@ fun SettingsScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
             )
+
+            // 0. Guest Limits
+            if (isGuest) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0xFF131E1B),
+                    border = BorderStroke(1.dp, Color(0xFF1E332C))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Daily Scans Used", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("$scanCount / 10", color = Color(0xFF10B981), fontWeight = FontWeight.Bold)
+                        }
+                        LinearProgressIndicator(
+                            progress = scanCount / 10f,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp).height(8.dp).clip(CircleShape),
+                            color = Color(0xFF10B981),
+                            trackColor = Color(0xFF0C1D19)
+                        )
+                        Text(
+                            "You are browsing as a guest. Sign in to sync your history across devices and unlock unlimited daily scans!",
+                            color = Color(0xFF9CA3AF),
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onLogout,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                        ) {
+                            Text("Sign In Now", color = Color(0xFF031612), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // 0. Account
+            SettingsGroup(title = "Account") {
+                SettingActionRow(
+                    label = if (isGuest) "Guest Mode" else "Logged in as",
+                    value = if (isGuest) "Active" else (userEmail ?: "Unknown"),
+                    icon = Icons.Default.Person,
+                    showChevron = false,
+                    onClick = {}
+                )
+                SettingsDivider()
+                SettingActionRow(
+                    label = if (isGuest) "Login / Sign up" else "Sign out",
+                    icon = if (isGuest) Icons.Default.Login else Icons.Default.Logout,
+                    iconTint = Color(0xFF9CA3AF),
+                    onClick = onLogout
+                )
+            }
 
             // 1. Appraisal
             SettingsGroup(title = "Appraisal") {
