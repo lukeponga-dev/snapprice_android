@@ -210,7 +210,16 @@ fun MainContainer(viewModel: AppraisalViewModel, authViewModel: AuthViewModel) {
                         val isGuest by authViewModel.isGuestMode.collectAsState()
                         ScanScreen(viewModel = viewModel, isGuest = isGuest, onScanCompleted = {})
                     }
-                    2 -> HistoryScreen(hasScans = historyList.isNotEmpty(), historyItems = historyList, onStartScanning = { selectedTab = 1 })
+                    2 -> {
+                        val syncStatus by viewModel.syncStatus.collectAsState()
+                        HistoryScreen(
+                            hasScans = historyList.isNotEmpty(),
+                            historyItems = historyList,
+                            syncStatus = syncStatus,
+                            onDeleteItem = { item -> viewModel.deleteHistoryItem(item) },
+                            onStartScanning = { selectedTab = 1 }
+                        )
+                    }
                     3 -> {
                         val userEmail by authViewModel.userEmail.collectAsState()
                         val isGuest by authViewModel.isGuestMode.collectAsState()

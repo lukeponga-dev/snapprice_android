@@ -36,6 +36,8 @@ import java.util.Locale
 fun HistoryScreen(
     hasScans: Boolean,
     historyItems: List<HistoryEntity> = emptyList(),
+    syncStatus: dev.lukeponga.pricesnap.history.SyncStatus = dev.lukeponga.pricesnap.history.SyncStatus.Idle,
+    onDeleteItem: (HistoryEntity) -> Unit = {},
     onStartScanning: () -> Unit
 ) {
     Box(
@@ -123,12 +125,24 @@ fun HistoryScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Saved Appraisals",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Saved Appraisals",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (syncStatus is dev.lukeponga.pricesnap.history.SyncStatus.Syncing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    color = Color(0xFF10B981),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = Color(0xFF072A20),
@@ -224,7 +238,7 @@ fun HistoryScreen(
                                 )
                             }
 
-                            // Valuation Price
+                            // Valuation Price & Delete
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
                                     text = "NZ$${String.format(Locale.US, "%.0f", item.price)}",

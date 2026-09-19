@@ -47,6 +47,6 @@ class PriceSnapApp : Application() {
             authManager = FirebaseAuthenticationManager(null)
         }
         
-        repository = HistoryRepository(database.historyDao(), NetworkClient.apiService, firestore)
+        repository = HistoryRepository(database.historyDao(), NetworkClient.apiService, firestore, authManager)
     }
 }

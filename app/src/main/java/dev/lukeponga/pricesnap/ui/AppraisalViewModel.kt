@@ -51,6 +51,8 @@ class AppraisalViewModel(
         initialValue = emptyList()
     )
 
+    val syncStatus: StateFlow<dev.lukeponga.pricesnap.history.SyncStatus> = repository.syncStatus
+
     val dailyScanCount: StateFlow<Int> = scanPreferenceManager.dailyScanCount.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -58,6 +60,19 @@ class AppraisalViewModel(
     )
 
     init { checkBackendHealth() }
+
+    fun syncCloudScans() {
+        viewModelScope.launch {
+            repository.syncFromFirestore()
+            repository.syncLocalScansToFirestore()
+        }
+    }
+
+    fun deleteHistoryItem(entity: HistoryEntity) {
+        viewModelScope.launch {
+            repository.deleteFromHistory(entity)
+        }
+    }
 
     fun checkBackendHealth() {
         viewModelScope.launch { refreshBackendHealth() }

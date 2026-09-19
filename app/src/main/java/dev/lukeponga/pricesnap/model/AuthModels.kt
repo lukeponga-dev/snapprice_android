@@ -1,8 +1,10 @@
 package dev.lukeponga.pricesnap.model
 
 data class User(
-    val email: String,
-    val name: String? = null
+    val uid: String = "",
+    val email: String = "",
+    val displayName: String? = null,
+    val isAnonymous: Boolean = false
 )
 
 sealed class AuthResult {
