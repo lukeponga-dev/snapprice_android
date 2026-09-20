@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,14 +53,36 @@ fun ResultScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                // Confidence Badge & Progress Bar
+                val confidence = appraisal.confidence ?: 0.0
+                val confidencePercent = (confidence * 100).toInt()
+                val confidenceColor = when {
+                    confidence >= 0.8 -> Color(0xFF22C55E) // Green
+                    confidence >= 0.4 -> Color(0xFFF59E0B) // Amber
+                    else -> Color(0xFFEF4444) // Red
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
                         text = appraisal.itemName ?: "Unknown Item",
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    LinearProgressIndicator(
+                        progress = { confidence.toFloat() },
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = confidenceColor,
+                        trackColor = confidenceColor.copy(alpha = 0.2f),
+                    )
+
                     Text(
                         text = "${appraisal.brand ?: "Generic"} • ${appraisal.itemCategory ?: "General"}",
                         color = Color(0xFF9CA3AF),
@@ -67,12 +90,10 @@ fun ResultScreen(
                     )
                 }
 
-                // Confidence Badge
-                val confidencePercent = remember(appraisal.confidence) { ((appraisal.confidence ?: 0.0) * 100).toInt() }
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFF072A20),
-                    border = BorderStroke(1.dp, Color(0xFF0F4E3C))
+                    color = confidenceColor.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, confidenceColor.copy(alpha = 0.3f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -82,12 +103,12 @@ fun ResultScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_sparkle),
                             contentDescription = null,
-                            tint = Color(0xFF34D399),
+                            tint = confidenceColor,
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
                             text = "$confidencePercent% CONFIDENCE",
-                            color = Color(0xFF34D399),
+                            color = confidenceColor,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold
                         )

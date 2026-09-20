@@ -238,20 +238,26 @@ fun HistoryScreen(
                                 )
                             }
 
-                            // Valuation Price & Delete
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "NZ$${String.format(Locale.US, "%.0f", item.price)}",
-                                    color = Color(0xFF22C55E),
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "${(item.confidence * 100).toInt()}% conf.",
-                                    color = Color(0xFF9CA3AF),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
+                                // Valuation Price & Delete
+                                val confidenceColor = when {
+                                    item.confidence >= 0.8 -> Color(0xFF22C55E)
+                                    item.confidence >= 0.4 -> Color(0xFFF59E0B)
+                                    else -> Color(0xFFEF4444)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "NZ$${String.format(Locale.US, "%.0f", item.price)}",
+                                        color = Color(0xFF22C55E),
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${(item.confidence * 100).toInt()}% conf.",
+                                        color = confidenceColor,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                         }
                     }
                 }
