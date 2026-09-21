@@ -1,7 +1,14 @@
 package dev.lukeponga.pricesnap.auth
 
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import dev.lukeponga.pricesnap.BuildConfig
 import dev.lukeponga.pricesnap.model.AuthResult
 import dev.lukeponga.pricesnap.model.User
 import kotlinx.coroutines.channels.awaitClose
@@ -176,6 +183,60 @@ class FirebaseAuthenticationManager(private val auth: FirebaseAuth? = null) {
             }
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Guest login failed")
+        }
+    }
+
+    suspend fun signInWithGoogle(context: Context): AuthResult {
+        val authInstance = actualAuth ?: return AuthResult.Error("Firebase Authentication is not configured.")
+        val credentialManager = CredentialManager.create(context)
+
+        // Web Client ID is required for Google Sign-In on Android with Firebase.
+        // Falls back to the project's OAuth client ID if not configured in secrets.
+        val webClientId = try {
+            val id = BuildConfig.GOOGLE_WEB_CLIENT_ID
+            if (id.isNullOrBlank() || id.contains("your-google-web-client-id")) {
+                "805381652466-2otcnb943n58i5cf3oqfbgsvf9o8gol9.apps.googleusercontent.com"
+            } else {
+                id
+            }
+        } catch (e: Exception) {
+            "805381652466-2otcnb943n58i5cf3oqfbgsvf9o8gol9.apps.googleusercontent.com"
+        }
+
+        val googleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(webClientId)
+            .build()
+
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+
+        return try {
+            val result = credentialManager.getCredential(context, request)
+            val credential = result.credential
+
+            if (credential is GoogleIdTokenCredential) {
+                val firebaseCredential = GoogleAuthProvider.getCredential(credential.idToken, null)
+                val authResult = authInstance.signInWithCredential(firebaseCredential).await()
+                val firebaseUser = authResult.user
+                if (firebaseUser != null) {
+                    AuthResult.Success(
+                        User(
+                            uid = firebaseUser.uid,
+                            email = firebaseUser.email ?: "",
+                            displayName = firebaseUser.displayName,
+                            isAnonymous = firebaseUser.isAnonymous
+                        )
+                    )
+                } else {
+                    AuthResult.Error("Google Sign-In failed: User is null")
+                }
+            } else {
+                AuthResult.Error("Unexpected credential type: ${credential.type}")
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(e.localizedMessage ?: "Google Sign-In failed")
         }
     }
 

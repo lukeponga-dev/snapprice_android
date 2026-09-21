@@ -18,7 +18,7 @@ android {
     minSdk = 26
     targetSdk = 36
     versionCode = 5
-    versionName = "1.1.2 beta"
+    versionName = "1.1.3"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -116,6 +116,7 @@ dependencies {
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.credentials.play.services)
   implementation(libs.googleid)
+  implementation(libs.recaptcha)
   implementation(libs.firebase.appcheck.recaptcha)
   implementation(libs.firebase.appcheck.debug)
   implementation(libs.kotlinx.coroutines.android)

@@ -57,6 +57,19 @@ class AuthViewModel(private val authManager: FirebaseAuthenticationManager) : Vi
         }
     }
 
+    fun signInWithGoogle(context: android.content.Context) {
+        viewModelScope.launch {
+            _authState.value = AuthUiState.Loading
+            when (val result = authManager.signInWithGoogle(context)) {
+                is AuthResult.Success -> {
+                    _isGuestMode.value = false
+                    _authState.value = AuthUiState.Success
+                }
+                is AuthResult.Error -> _authState.value = AuthUiState.Error(result.message)
+            }
+        }
+    }
+
     fun signUp(email: String, password: String, displayName: String? = null) {
         viewModelScope.launch {
             _authState.value = AuthUiState.Loading
