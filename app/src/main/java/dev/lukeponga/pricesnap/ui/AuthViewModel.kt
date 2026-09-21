@@ -1,5 +1,6 @@
 package dev.lukeponga.pricesnap.ui
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -101,10 +102,10 @@ class AuthViewModel(private val authManager: FirebaseAuthenticationManager) : Vi
         _resetPasswordState.value = PasswordResetState.Idle
     }
 
-    fun logout() {
+    fun logout(context: Context? = null) {
         viewModelScope.launch {
             _isGuestMode.value = false
-            authManager.logout()
+            authManager.logout(context)
         }
     }
 

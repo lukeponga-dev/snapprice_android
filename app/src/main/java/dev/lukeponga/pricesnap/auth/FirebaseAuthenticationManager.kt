@@ -1,10 +1,13 @@
 package dev.lukeponga.pricesnap.auth
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -203,45 +206,62 @@ class FirebaseAuthenticationManager(private val auth: FirebaseAuth? = null) {
             "805381652466-2otcnb943n58i5cf3oqfbgsvf9o8gol9.apps.googleusercontent.com"
         }
 
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(webClientId)
+        val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = webClientId)
             .build()
 
         val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
+            .addCredentialOption(signInOption)
             .build()
 
         return try {
             val result = credentialManager.getCredential(context, request)
             val credential = result.credential
 
-            if (credential is GoogleIdTokenCredential) {
-                val firebaseCredential = GoogleAuthProvider.getCredential(credential.idToken, null)
-                val authResult = authInstance.signInWithCredential(firebaseCredential).await()
-                val firebaseUser = authResult.user
-                if (firebaseUser != null) {
-                    AuthResult.Success(
-                        User(
-                            uid = firebaseUser.uid,
-                            email = firebaseUser.email ?: "",
-                            displayName = firebaseUser.displayName,
-                            isAnonymous = firebaseUser.isAnonymous
-                        )
-                    )
-                } else {
-                    AuthResult.Error("Google Sign-In failed: User is null")
+            val idToken = when {
+                credential is CustomCredential &&
+                        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL -> {
+                    try {
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        googleIdTokenCredential.idToken
+                    } catch (e: GoogleIdTokenParsingException) {
+                        return AuthResult.Error("Failed to parse Google ID token: ${e.localizedMessage}")
+                    }
                 }
+                else -> {
+                    return AuthResult.Error("Unexpected credential type: ${credential::class.java.simpleName}")
+                }
+            }
+
+            val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+            val authResult = authInstance.signInWithCredential(firebaseCredential).await()
+            val firebaseUser = authResult.user
+            if (firebaseUser != null) {
+                AuthResult.Success(
+                    User(
+                        uid = firebaseUser.uid,
+                        email = firebaseUser.email ?: "",
+                        displayName = firebaseUser.displayName,
+                        isAnonymous = firebaseUser.isAnonymous
+                    )
+                )
             } else {
-                AuthResult.Error("Unexpected credential type: ${credential.type}")
+                AuthResult.Error("Google Sign-In failed: User is null")
             }
         } catch (e: Exception) {
             AuthResult.Error(e.localizedMessage ?: "Google Sign-In failed")
         }
     }
 
-    suspend fun logout() {
+    suspend fun logout(context: Context? = null) {
         actualAuth?.signOut()
+        if (context != null) {
+            try {
+                val credentialManager = CredentialManager.create(context)
+                credentialManager.clearCredentialState(ClearCredentialStateRequest())
+            } catch (e: Exception) {
+                // Ignore failure clearing local credential state
+            }
+        }
     }
 }
 
