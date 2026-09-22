@@ -80,7 +80,7 @@ class PriceSnapApp : Application() {
             try {
                 recaptchaClient = Recaptcha.fetchClient(this@PriceSnapApp, "6LfKJsUtAAAAADXSiynxypRKf5DhLS1BiIMOFOcA")
             } catch(e: RecaptchaException) {
-                // Handle errors ...
+                android.util.Log.e("PriceSnapApp", "Failed to fetch Recaptcha client", e)
             }
         }
     }

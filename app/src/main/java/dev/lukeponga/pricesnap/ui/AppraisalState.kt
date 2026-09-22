@@ -1,11 +1,11 @@
 package dev.lukeponga.pricesnap.ui
 
-import dev.lukeponga.pricesnap.model.AppraisalData
+import dev.lukeponga.pricesnap.model.AppraisalResponse
 
 sealed class AppraisalUiState {
     object Idle : AppraisalUiState()
     object Loading : AppraisalUiState()
-    data class Success(val appraisal: AppraisalData) : AppraisalUiState()
+    data class Success(val appraisal: AppraisalResponse) : AppraisalUiState()
     data class Error(val message: String) : AppraisalUiState()
 }
 

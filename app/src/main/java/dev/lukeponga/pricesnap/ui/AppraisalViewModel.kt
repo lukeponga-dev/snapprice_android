@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dev.lukeponga.pricesnap.data.ScanPreferenceManager
 import dev.lukeponga.pricesnap.history.HistoryEntity
 import dev.lukeponga.pricesnap.history.HistoryRepository
-import dev.lukeponga.pricesnap.model.AppraisalData
+import dev.lukeponga.pricesnap.model.AppraisalResponse
 import dev.lukeponga.pricesnap.network.AppraisalRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,13 +68,14 @@ class AppraisalViewModel(
         _backendStatus.value = BackendStatus.Checking
         try {
             val response = appraisalRepository.ping()
-            val ping = response.body()
-            _backendStatus.value = if (response.isSuccessful && ping?.status == "ok") {
-                BackendStatus.Connected(ping.service, ping.timestamp)
+            val body = response.body()
+            _backendStatus.value = if (response.isSuccessful && body?.get("ok") == true) {
+                BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
             } else {
                 BackendStatus.Error("Backend returned HTTP ${response.code()}")
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            android.util.Log.e("AppraisalViewModel", "Backend health check failed", e)
             _backendStatus.value = BackendStatus.Offline
         }
     }
@@ -92,25 +93,24 @@ class AppraisalViewModel(
                 // appraisal itself proves connectivity and avoids an unnecessary round trip.
                 val response = appraisalRepository.analyzeImage(base64Image)
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body?.ok == true && body.appraisal != null) {
+                    val appraisal = response.body()
+                    if (appraisal != null) {
                         if (isGuest) {
                             scanPreferenceManager.incrementScanCount()
                         }
-                        val appraisal = body.appraisal
                         _backendStatus.value = BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
                         _uiState.value = AppraisalUiState.Success(appraisal)
                         imageFile?.let { file ->
                             repository.saveToHistory(
                                 HistoryEntity(
                                     id = UUID.randomUUID().toString(),
-                                    itemName = appraisal.itemName ?: "Unknown Item",
-                                    price = appraisal.resalePriceNz?.toDouble() ?: 0.0,
+                                    itemName = appraisal.item.name,
+                                    price = appraisal.valuation.resalePrice,
                                     imageUrl = file.absolutePath,
                                     date = System.currentTimeMillis(),
-                                    confidence = appraisal.confidence?.toFloat() ?: 0f,
-                                    category = appraisal.itemCategory ?: "Unknown",
-                                    condition = appraisal.product?.conditionGrade ?: "N/A"
+                                    confidence = appraisal.confidence / 100f,
+                                    category = appraisal.item.category ?: "Unknown",
+                                    condition = appraisal.condition.grade
                                 )
                             )
                         }
@@ -120,7 +120,8 @@ class AppraisalViewModel(
                 } else {
                     _uiState.value = AppraisalUiState.Error(userMessageFor(response.code()))
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                android.util.Log.e("AppraisalViewModel", "Appraisal failed", e)
                 _backendStatus.value = BackendStatus.Offline
                 _uiState.value = AppraisalUiState.Error("We couldn't connect to PriceSnap. Check your connection and try again.")
             }
@@ -142,7 +143,8 @@ class AppraisalViewModel(
                     "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
                 }
                 analyzeCapturedImage(base64Image, imageFile, isGuest)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                android.util.Log.e("AppraisalViewModel", "Failed to prepare image for appraisal", e)
                 _uiState.value = AppraisalUiState.Error("We couldn't open that photo. Please choose another image.")
             }
         }

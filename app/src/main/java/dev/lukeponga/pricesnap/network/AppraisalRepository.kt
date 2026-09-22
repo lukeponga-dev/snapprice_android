@@ -8,5 +8,5 @@ class AppraisalRepository(
     suspend fun ping() = apiService.ping()
 
     suspend fun analyzeImage(base64Image: String) =
-        apiService.analyzeItem(ImageRequest(image = base64Image))
+        apiService.valuate(ImageRequest(imageBase64 = base64Image))
 }

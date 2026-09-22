@@ -10,7 +10,6 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import dev.lukeponga.pricesnap.auth.FirebaseAuthenticationManager
-import dev.lukeponga.pricesnap.model.ImageRequest
 import dev.lukeponga.pricesnap.network.PriceSnapApiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,9 +53,6 @@ class HistoryRepository(
             }
         }
     }
-
-    suspend fun appraiseImage(base64Image: String) = 
-        apiService.analyzeItem(ImageRequest(base64Image)).body()?.appraisal
 
     suspend fun saveToHistory(entity: HistoryEntity) {
         historyDao.insertHistory(entity)

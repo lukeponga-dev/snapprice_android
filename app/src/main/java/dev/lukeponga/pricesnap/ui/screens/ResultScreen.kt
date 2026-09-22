@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lukeponga.pricesnap.model.AppraisalData
+import dev.lukeponga.pricesnap.model.AppraisalResponse
 
 import androidx.compose.ui.res.painterResource
 import dev.lukeponga.pricesnap.R
@@ -25,7 +25,7 @@ import dev.lukeponga.pricesnap.R
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ResultScreen(
-    appraisal: AppraisalData,
+    appraisal: AppraisalResponse,
     onScanAgain: () -> Unit,
     onSaveResult: () -> Unit
 ) {
@@ -54,11 +54,11 @@ fun ResultScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Confidence Badge & Progress Bar
-                val confidence = appraisal.confidence ?: 0.0
-                val confidencePercent = (confidence * 100).toInt()
+                val confidence = appraisal.confidence / 100f
+                val confidencePercent = appraisal.confidence
                 val confidenceColor = when {
-                    confidence >= 0.8 -> Color(0xFF22C55E) // Green
-                    confidence >= 0.4 -> Color(0xFFF59E0B) // Amber
+                    confidence >= 0.8f -> Color(0xFF22C55E) // Green
+                    confidence >= 0.4f -> Color(0xFFF59E0B) // Amber
                     else -> Color(0xFFEF4444) // Red
                 }
 
@@ -67,14 +67,14 @@ fun ResultScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = appraisal.itemName ?: "Unknown Item",
+                        text = appraisal.item.name,
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     
                     LinearProgressIndicator(
-                        progress = { confidence.toFloat() },
+                        progress = { confidence },
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
                             .height(6.dp)
@@ -84,7 +84,7 @@ fun ResultScreen(
                     )
 
                     Text(
-                        text = "${appraisal.brand ?: "Generic"} • ${appraisal.itemCategory ?: "General"}",
+                        text = "${appraisal.item.brand ?: "Generic"} • ${appraisal.item.category ?: "General"}",
                         color = Color(0xFF9CA3AF),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -140,7 +140,7 @@ fun ResultScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = "${appraisal.conditionScore ?: 0}",
+                                text = "${appraisal.condition.score}",
                                 color = Color.White,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold
@@ -154,7 +154,7 @@ fun ResultScreen(
                         }
                         
                         // Condition Grade Badge
-                        val grade = remember(appraisal.product?.conditionGrade) { appraisal.product?.conditionGrade ?: "B" }
+                        val grade = appraisal.condition.grade
                         Text(
                             text = "Grade $grade",
                             color = Color(0xFF34D399),
@@ -166,7 +166,7 @@ fun ResultScreen(
 
                     // Summary Description
                     Text(
-                        text = appraisal.product?.summary ?: "No condition summary available.",
+                        text = "A thorough assessment based on the visual evidence provided.",
                         color = Color(0xFF9CA3AF),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
@@ -178,7 +178,7 @@ fun ResultScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Defect Chips
-                val defects = appraisal.defects ?: emptyList()
+                val defects = appraisal.condition.defects
                 if (defects.isNotEmpty()) {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -226,7 +226,7 @@ fun ResultScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "$${appraisal.resalePriceNz ?: 0}",
+                            text = "$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.resalePrice)}",
                             color = Color(0xFF22C55E),
                             fontSize = 30.sp,
                             fontWeight = FontWeight.Bold
@@ -247,7 +247,7 @@ fun ResultScreen(
                             border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                         ) {
                             Text(
-                                text = appraisal.market?.bestPlatform ?: "Trade Me",
+                                text = appraisal.market.bestPlatform ?: "Trade Me",
                                 color = Color(0xFF34D399),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
@@ -261,7 +261,6 @@ fun ResultScreen(
                 HorizontalDivider(color = Color(0xFF143029))
                 Spacer(modifier = Modifier.height(12.dp))
 
-                val trend = appraisal.market?.trend ?: "stable"
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -273,7 +272,7 @@ fun ResultScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "Market trend: ${trend.replaceFirstChar { it.uppercase() }}",
+                        text = "Market analysis version: ${appraisal.metadata.version}",
                         color = Color(0xFF9CA3AF),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -283,14 +282,14 @@ fun ResultScreen(
 
         // 4. Marketplace Comparison Section
         Text(
-            text = "MARKETPLACE COMPARISONS (NZD)",
+            text = "MARKETPLACE COMPARISONS (${appraisal.valuation.currency})",
             color = Color(0xFF6B8078),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(top = 4.dp)
         )
 
-        val trademe = appraisal.market?.trademe
+        val trademe = appraisal.market.trademe
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -315,7 +314,7 @@ fun ResultScreen(
                         border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                     ) {
                         Text(
-                            text = "$${trademe?.median ?: 0} avg",
+                            text = "$${String.format(java.util.Locale.US, "%.0f", trademe?.median ?: 0.0)} avg",
                             color = Color(0xFF34D399),
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -330,8 +329,8 @@ fun ResultScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Low: \$${trademe?.low ?: 0}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
-                    Text(text = "High: \$${trademe?.high ?: 0}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                    Text(text = "Low: \$${String.format(java.util.Locale.US, "%.0f", trademe?.low ?: 0.0)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                    Text(text = "High: \$${String.format(java.util.Locale.US, "%.0f", trademe?.high ?: 0.0)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }

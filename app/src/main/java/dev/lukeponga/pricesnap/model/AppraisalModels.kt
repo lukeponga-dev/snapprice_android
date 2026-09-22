@@ -3,57 +3,50 @@ package dev.lukeponga.pricesnap.model
 import com.google.gson.annotations.SerializedName
 
 data class ImageRequest(
-    @SerializedName("image") val image: String
-)
-
-data class PingResponse(
-    @SerializedName("status") val status: String,
-    @SerializedName("service") val service: String,
-    @SerializedName("timestamp") val timestamp: Long
+    @SerializedName("image") val imageBase64: String
 )
 
 data class AppraisalResponse(
-    @SerializedName("ok") val ok: Boolean,
-    @SerializedName("appraisal") val appraisal: AppraisalData?
+    @SerializedName("item") val item: ItemIdentity,
+    @SerializedName("condition") val condition: ConditionResult,
+    @SerializedName("valuation") val valuation: ValuationResult,
+    @SerializedName("market") val market: MarketEvidence,
+    @SerializedName("confidence") val confidence: Int,
+    @SerializedName("metadata") val metadata: Metadata
 )
 
-data class AppraisalData(
-    @SerializedName("item_category") val itemCategory: String?,
-    @SerializedName("item_name") val itemName: String?,
+data class ItemIdentity(
+    @SerializedName("name") val name: String,
     @SerializedName("brand") val brand: String?,
-    @SerializedName("condition_score") val conditionScore: Int?,
-    @SerializedName("defects") val defects: List<String>?,
-    @SerializedName("resale_price_nz") val resalePriceNz: Int?,
-    @SerializedName("confidence") val confidence: Double?,
-    @SerializedName("product") val product: ProductDetails?,
-    @SerializedName("market") val market: MarketData?
+    @SerializedName("category") val category: String?
 )
 
-data class ProductDetails(
-    @SerializedName("name") val name: String?,
-    @SerializedName("brand") val brand: String?,
-    @SerializedName("category") val category: String?,
-    @SerializedName("condition_score") val conditionScore: Int?,
-    @SerializedName("condition_grade") val conditionGrade: String?,
-    @SerializedName("defects") val defects: List<String>?,
-    @SerializedName("resale_price_nz") val resalePriceNz: Int?,
-    @SerializedName("confidence") val confidence: Double?,
-    @SerializedName("confidence_color") val confidenceColor: String?,
-    @SerializedName("summary") val summary: String?
+data class ConditionResult(
+    @SerializedName("score") val score: Int,
+    @SerializedName("grade") val grade: String,
+    @SerializedName("defects") val defects: List<String>
 )
 
-data class MarketData(
-    @SerializedName("trademe") val trademe: MarketplaceStats?,
-    @SerializedName("facebook") val facebook: MarketplaceStats?,
-    @SerializedName("ebay") val ebay: MarketplaceStats?,
-    @SerializedName("trend") val trend: String?,
-    @SerializedName("recommended_price") val recommendedPrice: Int?,
-    @SerializedName("best_platform") val bestPlatform: String?
+data class ValuationResult(
+    @SerializedName("resalePrice") val resalePrice: Double,
+    @SerializedName("currency") val currency: String = "NZD"
 )
 
-data class MarketplaceStats(
-    @SerializedName("low") val low: Int?,
-    @SerializedName("median") val median: Int?,
-    @SerializedName("high") val high: Int?,
-    @SerializedName("sample_listings") val sampleListings: List<String>?
+data class MarketEvidence(
+    @SerializedName("trademe") val trademe: MarketStats?,
+    @SerializedName("facebook") val facebook: MarketStats?,
+    @SerializedName("ebay") val ebay: MarketStats?,
+    @SerializedName("recommendedPrice") val recommendedPrice: Double?,
+    @SerializedName("bestPlatform") val bestPlatform: String?
+)
+
+data class MarketStats(
+    @SerializedName("low") val low: Double?,
+    @SerializedName("median") val median: Double?,
+    @SerializedName("high") val high: Double?
+)
+
+data class Metadata(
+    @SerializedName("timestamp") val timestamp: Long,
+    @SerializedName("version") val version: String
 )
