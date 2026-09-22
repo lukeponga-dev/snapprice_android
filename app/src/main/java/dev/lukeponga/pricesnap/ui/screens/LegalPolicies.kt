@@ -4,7 +4,7 @@ object LegalPolicies {
     const val PRIVACY_POLICY = """PriceSnap – Privacy Policy (Prototype Version)
 Last updated: 16 September 2026
 Owner: Luke Ponga, trading as PriceSnap
-Contact: lukeponga9@gmail.com
+Contact: developmentdesignsltd@gmail.com
 
 1. Introduction
 PriceSnap is an experimental Android prototype that provides AI-generated resale value estimates from photos submitted by users. This policy explains what information is processed, how it is used, and the rights available to you. Features and data flows may change as the service evolves.
@@ -47,12 +47,12 @@ This policy may be updated as PriceSnap moves from prototype to production. Mate
 
 12. Contact
 Luke Ponga, trading as PriceSnap
-Email: lukeponga9@gmail.com"""
+Email: developmentdesignsltd@gmail.com"""
 
     const val DATA_DELETION_POLICY = """PriceSnap – Data Deletion Policy (Prototype Version)
 Last updated: 16 September 2026
 Owner: Luke Ponga, trading as PriceSnap
-Contact: lukeponga9@gmail.com
+Contact: developmentdesignsltd@gmail.com
 
 1. Introduction
 This policy explains how information can be removed from the PriceSnap Android prototype. PriceSnap currently has no user accounts or cloud-synchronised history.
@@ -70,7 +70,7 @@ PriceSnap sends submitted photos through its Vercel API endpoint to Google's fre
 PriceSnap does not operate a separate analytics platform in the Android prototype. Vercel, Google, Android, or your device may retain operational, security, or crash records under their own policies. PriceSnap may be unable to identify or delete anonymous or provider-controlled records.
 
 6. Deletion Requests
-For questions or requests concerning information controlled by PriceSnap, email lukeponga9@gmail.com. Include the approximate date and time of use and a description of the issue. Do not resend the original image unless requested and you choose to do so.
+For questions or requests concerning information controlled by PriceSnap, email developmentdesignsltd@gmail.com. Include the approximate date and time of use and a description of the issue. Do not resend the original image unless requested and you choose to do so.
 
 7. Legal and Security Retention
 Limited information may be retained where reasonably necessary to investigate abuse or a security incident, comply with law, or establish or defend a legal claim. It will be removed when no longer required.
@@ -83,5 +83,5 @@ This policy may change as PriceSnap introduces accounts, persistent cloud storag
 
 10. Contact
 Luke Ponga, trading as PriceSnap
-Email: lukeponga9@gmail.com"""
+Email: developmentdesignsltd@gmail.com"""
 }

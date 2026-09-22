@@ -1,49 +1,48 @@
-# PriceSnap – Data Deletion Policy (Prototype Version)
+# PriceSnap Data Deletion Policy
 
-**Last updated:** 16 September 2026
+**Last updated:** 23 September 2026  
+**Operator:** Luke Ponga, trading as PriceSnap  
+**Contact:** [developmentdesignsltd@gmail.com](mailto:developmentdesignsltd@gmail.com)
 
-**Owner:** Luke Ponga, trading as PriceSnap
+## 1. Delete scan history
 
-**Contact:** [lukeponga9@gmail.com](mailto:lukeponga9@gmail.com)
+Open **Settings** and select **Delete scan history**. After confirmation, PriceSnap permanently deletes appraisal records from the local Room database and removes their cached thumbnail files from the device. This action cannot be undone.
 
-## 1. Introduction
+## 2. Delete all local app data
 
-This policy explains how information can be removed from the PriceSnap Android prototype. PriceSnap currently has no user accounts or cloud-synchronised history.
+Go to **Android Settings → Apps → PriceSnap → Storage → Clear storage**. Uninstalling PriceSnap also removes its private local app data. Android cloud backup is disabled for PriceSnap.
 
-## 2. Delete Scan History in PriceSnap
+## 3. Delete your PriceSnap account
 
-Open **Settings** and select **Delete scan history**. After you confirm, PriceSnap permanently deletes all appraisal records from its local Room database and deletes the associated cached thumbnail files from the device. This action cannot be undone.
+If you created an account using email/password or Google sign-in, use the account deletion control in the app, or email [developmentdesignsltd@gmail.com](mailto:developmentdesignsltd@gmail.com) from the account’s email address. Guest users may sign out or request deletion of their anonymous Firebase account.
 
-## 3. Delete All Local App Data
+Account deletion requests cover information controlled by PriceSnap and the associated Firebase Authentication account. They do not automatically delete information retained independently by Google, Firebase, Vercel, Gemini, Android, or other providers under their own policies.
 
-You can delete all remaining PriceSnap data through **Android Settings → Apps → PriceSnap → Storage → Clear storage**. Uninstalling PriceSnap also removes its private local app data. Android cloud backup is disabled for PriceSnap.
+## 4. Submitted images
 
-## 4. Submitted Images
+PriceSnap sends submitted photos through its Vercel API endpoint to Google Gemini for analysis. PriceSnap does not intentionally retain a permanent server-side image library after processing. Provider-controlled copies, prompts, or operational records may be retained under the provider’s applicable terms, and PriceSnap may be unable to retrieve or delete them.
 
-PriceSnap sends submitted photos through its Vercel API endpoint to Google's free-tier Gemini API. PriceSnap does not intentionally retain a permanent server-side copy after the request is processed. Google may retain, review, or use submitted content under its free-tier terms. PriceSnap cannot retrieve or delete information independently controlled by Google.
+## 5. Operational records
 
-## 5. Operational Records
+Vercel, Google, Firebase, Android, or your device may retain security, diagnostic, crash, or request records under their own policies. PriceSnap may be unable to identify or delete anonymous or provider-controlled records.
 
-PriceSnap does not operate a separate analytics platform in the Android prototype. Vercel, Google, Android, or your device may retain operational, security, or crash records under their own policies. PriceSnap may be unable to identify or delete anonymous or provider-controlled records.
+## 6. Deletion requests
 
-## 6. Deletion Requests
+For questions or requests concerning information controlled by PriceSnap, email [developmentdesignsltd@gmail.com](mailto:developmentdesignsltd@gmail.com). Include the approximate date and time of use, the account email if applicable, and a description of the request. Do not resend the original image unless requested and you choose to do so.
 
-For questions or requests concerning information controlled by PriceSnap, email [lukeponga9@gmail.com](mailto:lukeponga9@gmail.com). Include the approximate date and time of use and a description of the issue. Do not resend the original image unless requested and you choose to do so.
-
-## 7. Legal and Security Retention
+## 7. Legal and security retention
 
 Limited information may be retained where reasonably necessary to investigate abuse or a security incident, comply with law, or establish or defend a legal claim. It will be removed when no longer required.
 
-## 8. Minimum Age
+## 8. Children
 
-PriceSnap is not intended for anyone under 18. If PriceSnap learns that it controls information submitted by a person under 18, it will take reasonable steps to delete that information.
+PriceSnap is not intended for anyone under 18. If PriceSnap learns that it controls information submitted by a person under 18, it will take reasonable steps to delete it.
 
 ## 9. Changes
 
-This policy may change as PriceSnap introduces accounts, persistent cloud storage, paid AI services, or different infrastructure. The updated policy will show a revised date.
+This policy may change as PriceSnap introduces new account, storage, AI, or infrastructure features. The updated policy will show a revised date.
 
 ## 10. Contact
 
-**Luke Ponga, trading as PriceSnap**
-
-**Email:** [lukeponga9@gmail.com](mailto:lukeponga9@gmail.com)
+**Luke Ponga, trading as PriceSnap**  
+**Email:** [developmentdesignsltd@gmail.com](mailto:developmentdesignsltd@gmail.com)

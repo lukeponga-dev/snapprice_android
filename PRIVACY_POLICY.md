@@ -1,63 +1,63 @@
-# PriceSnap – Privacy Policy (Prototype Version)
+# PriceSnap Privacy Policy
 
-**Last updated:** 16 September 2026
+**Last updated:** 23 September 2026  
+**Operator:** Luke Ponga, trading as PriceSnap  
+**Contact:** [developmentdesignsltd@gmail.com](mailto:developmentdesignsltd@gmail.com)
 
-**Owner:** Luke Ponga, trading as PriceSnap
+## 1. Scope
 
-**Contact:** [lukeponga9@gmail.com](mailto:lukeponga9@gmail.com)
+PriceSnap is an Android app that uses photographs to provide AI-assisted resale-price estimates. This policy explains what PriceSnap collects, why it is used, where it is processed, and how you can request deletion.
 
-## 1. Introduction
+## 2. Information we process
 
-PriceSnap is an experimental Android prototype that provides AI-generated resale value estimates from photos submitted by users. This policy explains what information is processed, how it is used, and the rights available to you. Features and data flows may change as the service evolves.
+Depending on the features you use, PriceSnap may process:
 
-## 2. Information We Process
+- Photos you capture or select for an appraisal.
+- Appraisal results, item descriptions, prices, condition information, timestamps, and cached thumbnails saved in the app’s local storage.
+- Account information when you sign in: email address, Firebase user identifier, display name, authentication provider, and account status. Guest sign-in creates an anonymous Firebase account.
+- Information needed to provide, secure, and troubleshoot the service, such as request metadata and diagnostic or crash information from the app and its service providers.
 
-PriceSnap processes photos you capture or select for appraisal. The Android app also stores appraisal results, timestamps, item details, and local thumbnail file paths in a private Room database on your device. PriceSnap does not currently provide user accounts or cloud-synchronised scan history.
+PriceSnap does not operate its own advertising or analytics system and does not sell personal information.
 
-The app does not operate a separate analytics or advertising system. Google, Vercel, Android, or your device may generate ordinary operational, security, or crash information under their own terms and settings.
+## 3. How we use information
 
-## 3. How Photos Are Used
+We use information to authenticate you and maintain your account; analyse submitted images and return an appraisal; save and display your local scan history; provide support, maintain security, and diagnose errors; and comply with legal obligations.
 
-Your photo is encoded and sent over HTTPS to PriceSnap's Vercel API endpoint, which forwards it to Google's free-tier Gemini API for analysis. Under Google's applicable free-tier terms, submitted inputs may be reviewed by humans and used to improve Google products and machine-learning technologies. Do not submit sensitive, confidential, or identifying images.
+PriceSnap does not use submitted photos for its own advertising, profiling, or model training.
 
-PriceSnap uses photos only to return the requested appraisal and to maintain an optional local thumbnail on your device. PriceSnap does not use submitted photos for its own model training, advertising, or profiling.
+## 4. Service providers and overseas processing
 
-## 4. Local Storage
+Photos and appraisal requests are sent over HTTPS to the PriceSnap API, hosted by Vercel, which sends the image to Google Gemini for analysis. Authentication is provided by Firebase Authentication. These providers may process information in New Zealand, the United States, or other countries where they or their service providers operate. Their handling of information is governed by their own privacy terms.
 
-Saved appraisal history and thumbnail images remain on your device until you delete scan history, clear PriceSnap's app data, or uninstall the app. PriceSnap disables Android cloud backup for its app data. Local Room data is private to the app but is not separately encrypted by PriceSnap beyond protections supplied by Android and your device.
+Do not submit sensitive, confidential, or identifying images unless you are comfortable with this processing.
 
-## 5. Overseas Processing
+## 5. Local storage
 
-Google and Vercel may process information outside New Zealand, including in the United States and other countries where they or their service providers operate. Their handling of information is governed by their applicable terms and privacy policies.
+Scan history and cached thumbnails are stored locally on your device until you delete them, clear PriceSnap storage, or uninstall the app. Android backup is disabled for PriceSnap. Local app data is protected by Android and your device; PriceSnap does not separately encrypt the Room database.
 
-## 6. Retention and Deletion
+## 6. Retention and deletion
 
-PriceSnap does not intentionally create a permanent server-side image library. The Vercel endpoint processes the image to fulfil the appraisal request. Google may retain submitted content under its free-tier Gemini terms; PriceSnap cannot directly retrieve or delete copies controlled by Google.
+PriceSnap does not intentionally maintain a permanent server-side image library. The API processes an image to fulfil the appraisal request. Vercel, Google, Firebase, or other providers may retain operational records or submitted content under their applicable terms, and PriceSnap may not be able to retrieve or delete provider-controlled copies.
 
-Use **Settings → Delete scan history** to remove saved Room records and their associated cached image files from the device. You can also clear all PriceSnap app data through Android settings or uninstall the app.
+To remove local history, use **Settings → Delete scan history**. To remove all local app data, clear PriceSnap storage in Android settings or uninstall the app. To delete a PriceSnap account, use the account deletion control in the app or contact us at the address below. Account deletion does not automatically delete information retained independently by Google, Firebase, Vercel, or other providers.
 
-## 7. Minimum Age
+## 7. Security
 
-PriceSnap is not intended for anyone under 18 years of age. By using the prototype, you confirm that you are at least 18.
+PriceSnap uses HTTPS for data in transit and restricts scan history to private app storage. No electronic service is completely secure. The app’s development configuration may enable diagnostic HTTP logging; users should use a production build and should never submit sensitive content to a development build.
 
-## 8. Sharing
+## 8. Children
 
-PriceSnap does not sell personal information or share it with advertisers. Information is disclosed only to service providers required to operate the prototype, including Vercel for the API endpoint and Google Gemini for image analysis, or where disclosure is required by law.
+PriceSnap is not intended for children under 18. We do not knowingly collect personal information from children under 18. If you believe a child has provided information, contact us so we can take reasonable steps to delete it.
 
-## 9. Security
+## 9. Your rights
 
-PriceSnap uses HTTPS for data in transit, avoids logging photo request bodies in the Android app, restricts history to local app storage, and disables Android cloud backup. No system is completely secure, so users should avoid submitting sensitive or confidential images.
+Subject to applicable law, you may ask for access to, correction of, or deletion of personal information controlled by PriceSnap. You may also withdraw use of optional account features by signing out or deleting your account. We may be unable to identify anonymous provider logs or delete copies controlled independently by a service provider.
 
-## 10. Your Rights
+## 10. Changes
 
-You may ask whether PriceSnap controls personal information about you and request access, correction, or deletion by contacting the email below. PriceSnap may be unable to identify anonymous provider logs or delete copies independently controlled by Google or Vercel.
+We may update this policy when the app, providers, or data practices change. The revised policy will show a new “Last updated” date and will be made available in the app or repository where reasonably practicable.
 
-## 11. Changes
+## 11. Contact
 
-This policy may be updated as PriceSnap moves from prototype to production. Material changes will be communicated through the app, website, or repository where reasonably practicable.
-
-## 12. Contact
-
-**Luke Ponga, trading as PriceSnap**
-
-**Email:** [lukeponga9@gmail.com](mailto:lukeponga9@gmail.com)
+**Luke Ponga, trading as PriceSnap**  
+**Email:** [developmentdesignsltd@gmail.com](mailto:developmentdesignsltd@gmail.com)

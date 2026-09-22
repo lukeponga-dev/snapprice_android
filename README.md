@@ -46,5 +46,9 @@ Built with ❤️ using **Google AI Studio** & **Jetpack Compose**.
 
 ## Privacy and data deletion
 
+PriceSnap sends appraisal photos over HTTPS to its Vercel API, which uses Google Gemini to analyse them. Firebase Authentication processes account details when sign-in is used. Scan history and thumbnails are stored locally on the device, and Android backup is disabled.
+
+For the full details, including provider processing, retention, security, and your rights, see:
+
 - [Privacy Policy](PRIVACY_POLICY.md)
 - [Data Deletion Policy](DATA_DELETION_POLICY.md)
