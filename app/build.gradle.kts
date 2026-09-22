@@ -17,8 +17,8 @@ android {
     applicationId = "dev.lukeponga.pricesnap"
     minSdk = 26
     targetSdk = 36
-    versionCode = 8
-    versionName = "1.1.5"
+    versionCode = 9
+    versionName = "9.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     val backendUrl = providers.gradleProperty("pricesnapBaseUrl").orNull
