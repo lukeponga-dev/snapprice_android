@@ -14,13 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-sealed class PasswordResetState {
-    object Idle : PasswordResetState()
-    object Loading : PasswordResetState()
-    data class Success(val message: String) : PasswordResetState()
-    data class Error(val message: String) : PasswordResetState()
-}
-
 class AuthViewModel(private val authManager: FirebaseAuthenticationManager) : ViewModel() {
 
     val isLoggedIn: StateFlow<Boolean> = authManager.isLoggedIn
@@ -157,12 +150,5 @@ class AuthViewModel(private val authManager: FirebaseAuthenticationManager) : Vi
             throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
-}
-
-sealed class AuthUiState {
-    object Idle : AuthUiState()
-    object Loading : AuthUiState()
-    object Success : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
 }
 

@@ -23,13 +23,6 @@ import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-sealed class SyncStatus {
-    object Idle : SyncStatus()
-    object Syncing : SyncStatus()
-    data class Synced(val lastSyncTime: Long, val itemCount: Int) : SyncStatus()
-    data class Error(val message: String) : SyncStatus()
-}
-
 class HistoryRepository(
     private val historyDao: HistoryDao,
     private val apiService: PriceSnapApiService,
