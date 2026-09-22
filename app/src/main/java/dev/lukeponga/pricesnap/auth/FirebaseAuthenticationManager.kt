@@ -252,6 +252,57 @@ class FirebaseAuthenticationManager(private val auth: FirebaseAuth? = null) {
         }
     }
 
+    suspend fun updateDisplayName(displayName: String): Result<Unit> {
+        val user = actualAuth?.currentUser ?: return Result.failure(Exception("User is not signed in."))
+        return try {
+            val request = UserProfileChangeRequest.Builder()
+                .setDisplayName(displayName.trim())
+                .build()
+            user.updateProfile(request).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updatePassword(newPassword: String): Result<Unit> {
+        val user = actualAuth?.currentUser ?: return Result.failure(Exception("User is not signed in."))
+        if (newPassword.length < 6) {
+            return Result.failure(Exception("Password must be at least 6 characters."))
+        }
+        return try {
+            user.updatePassword(newPassword).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteAccount(): Result<Unit> {
+        val user = actualAuth?.currentUser ?: return Result.failure(Exception("User is not signed in."))
+        return try {
+            user.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun reloadUser(): User? {
+        val user = actualAuth?.currentUser ?: return null
+        return try {
+            user.reload().await()
+            User(
+                uid = user.uid,
+                email = user.email ?: "",
+                displayName = user.displayName,
+                isAnonymous = user.isAnonymous
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     suspend fun logout(context: Context? = null) {
         actualAuth?.signOut()
         if (context != null) {

@@ -168,6 +168,10 @@ class AppraisalViewModel(
         viewModelScope.launch { repository.clearAllHistory() }
     }
 
+    fun clearLocalCacheOnLogout() {
+        viewModelScope.launch { repository.clearLocalCacheOnLogout() }
+    }
+
     class Factory(
         private val repository: HistoryRepository,
         private val scanPreferenceManager: ScanPreferenceManager

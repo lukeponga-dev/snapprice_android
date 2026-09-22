@@ -98,8 +98,43 @@ class AuthViewModel(private val authManager: FirebaseAuthenticationManager) : Vi
         }
     }
 
+    fun sendPasswordReset(email: String, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = authManager.sendPasswordReset(email)
+            onResult(result)
+        }
+    }
+
     fun resetPasswordState() {
         _resetPasswordState.value = PasswordResetState.Idle
+    }
+
+    fun updateDisplayName(name: String, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = authManager.updateDisplayName(name)
+            onResult(result)
+        }
+    }
+
+    fun updatePassword(newPassword: String, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = authManager.updatePassword(newPassword)
+            onResult(result)
+        }
+    }
+
+    fun deleteAccount(onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = authManager.deleteAccount()
+            if (result.isSuccess) {
+                _isGuestMode.value = false
+            }
+            onResult(result)
+        }
+    }
+
+    fun exitGuestMode() {
+        _isGuestMode.value = false
     }
 
     fun logout(context: Context? = null) {

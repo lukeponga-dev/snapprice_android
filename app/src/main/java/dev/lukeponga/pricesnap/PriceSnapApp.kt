@@ -70,7 +70,7 @@ class PriceSnapApp : Application() {
             authManager = FirebaseAuthenticationManager(null)
         }
         
-        repository = HistoryRepository(database.historyDao(), NetworkClient.apiService, firestore, authManager)
+        repository = HistoryRepository(database.historyDao(), NetworkClient.apiService, firestore, authManager, this)
         
         initializeRecaptchaClient()
     }

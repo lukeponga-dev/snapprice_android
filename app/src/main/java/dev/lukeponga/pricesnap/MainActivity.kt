@@ -221,16 +221,31 @@ fun MainContainer(viewModel: AppraisalViewModel, authViewModel: AuthViewModel) {
                         )
                     }
                     3 -> {
+                        val currentUser by authViewModel.currentUser.collectAsState()
                         val userEmail by authViewModel.userEmail.collectAsState()
                         val isGuest by authViewModel.isGuestMode.collectAsState()
                         val scanCount by viewModel.dailyScanCount.collectAsState()
-                        
+                        val syncStatus by viewModel.syncStatus.collectAsState()
+
                         SettingsScreen(
-                            onClearHistory = { viewModel.clearHistory() },
-                            onLogout = { authViewModel.logout() },
+                            currentUser = currentUser,
                             userEmail = userEmail,
                             isGuest = isGuest,
-                            scanCount = scanCount
+                            scanCount = scanCount,
+                            syncStatus = syncStatus,
+                            onClearHistory = { viewModel.clearHistory() },
+                            onLogout = {
+                                viewModel.clearLocalCacheOnLogout()
+                                authViewModel.logout()
+                            },
+                            onSyncNow = { viewModel.syncCloudScans() },
+                            onUpdateDisplayName = { name, callback -> authViewModel.updateDisplayName(name, callback) },
+                            onUpdatePassword = { newPass, callback -> authViewModel.updatePassword(newPass, callback) },
+                            onSendPasswordReset = { email, callback -> authViewModel.sendPasswordReset(email, callback) },
+                            onDeleteAccount = { callback ->
+                                viewModel.clearHistory()
+                                authViewModel.deleteAccount(callback)
+                            }
                         )
                     }
                 }
