@@ -21,6 +21,10 @@ android {
     versionName = "1.1.5"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    val backendUrl = providers.gradleProperty("pricesnapBaseUrl").orNull
+      ?: System.getenv("PRICESNAP_BASE_URL")
+      ?: "https://pricesnap-server.vercel.app/"
+    buildConfigField("String", "PRICESNAP_BASE_URL", "\"$backendUrl\"")
   }
 
   signingConfigs {

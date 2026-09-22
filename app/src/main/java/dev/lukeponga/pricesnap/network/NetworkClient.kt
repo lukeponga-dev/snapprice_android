@@ -1,5 +1,6 @@
 package dev.lukeponga.pricesnap.network
 
+import dev.lukeponga.pricesnap.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -8,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object NetworkClient {
 
-    private const val BASE_URL = "https://pricesnap-server.vercel.app/"
+    private const val BASE_URL = BuildConfig.PRICESNAP_BASE_URL
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(

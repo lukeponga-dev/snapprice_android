@@ -10,8 +10,10 @@ import retrofit2.http.POST
 interface PriceSnapApiService {
 
     @GET("api/ping")
-    suspend fun ping(): Response<Map<String, Boolean>>
+    suspend fun ping(): Response<PingResponse>
 
     @POST("api/valuate")
     suspend fun valuate(@Body request: ImageRequest): Response<AppraisalResponse>
 }
+
+data class PingResponse(val ok: Boolean)

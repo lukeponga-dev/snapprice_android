@@ -54,8 +54,8 @@ fun ResultScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Confidence Badge & Progress Bar
-                val confidence = appraisal.confidence / 100f
-                val confidencePercent = appraisal.confidence
+                val confidence = (appraisal.confidence.score / 100f).coerceIn(0f, 1f)
+                val confidencePercent = appraisal.confidence.score
                 val confidenceColor = when {
                     confidence >= 0.8f -> Color(0xFF22C55E) // Green
                     confidence >= 0.4f -> Color(0xFFF59E0B) // Amber
@@ -226,7 +226,7 @@ fun ResultScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.resalePrice)}",
+                        text = "NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.expected)}",
                             color = Color(0xFF22C55E),
                             fontSize = 30.sp,
                             fontWeight = FontWeight.Bold
@@ -247,7 +247,7 @@ fun ResultScreen(
                             border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                         ) {
                             Text(
-                                text = appraisal.market.bestPlatform ?: "Trade Me",
+                                text = appraisal.marketplaceRecommendation,
                                 color = Color(0xFF34D399),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
@@ -272,7 +272,7 @@ fun ResultScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "Market analysis version: ${appraisal.metadata.version}",
+                        text = appraisal.summary,
                         color = Color(0xFF9CA3AF),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -289,7 +289,6 @@ fun ResultScreen(
             modifier = Modifier.padding(top = 4.dp)
         )
 
-        val trademe = appraisal.market.trademe
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -303,7 +302,7 @@ fun ResultScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Trade Me (NZ)",
+                        text = "Comparable listings",
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
@@ -314,7 +313,7 @@ fun ResultScreen(
                         border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                     ) {
                         Text(
-                            text = "$${String.format(java.util.Locale.US, "%.0f", trademe?.median ?: 0.0)} avg",
+                            text = "${appraisal.comparables.size} found",
                             color = Color(0xFF34D399),
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -329,8 +328,8 @@ fun ResultScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Low: \$${String.format(java.util.Locale.US, "%.0f", trademe?.low ?: 0.0)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
-                    Text(text = "High: \$${String.format(java.util.Locale.US, "%.0f", trademe?.high ?: 0.0)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                    Text(text = "Low: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.low)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                    Text(text = "High: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.high)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }

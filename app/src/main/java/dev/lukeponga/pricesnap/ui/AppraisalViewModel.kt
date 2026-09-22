@@ -69,7 +69,7 @@ class AppraisalViewModel(
         try {
             val response = appraisalRepository.ping()
             val body = response.body()
-            _backendStatus.value = if (response.isSuccessful && body?.get("ok") == true) {
+            _backendStatus.value = if (response.isSuccessful && body?.ok == true) {
                 BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
             } else {
                 BackendStatus.Error("Backend returned HTTP ${response.code()}")
@@ -105,10 +105,10 @@ class AppraisalViewModel(
                                 HistoryEntity(
                                     id = UUID.randomUUID().toString(),
                                     itemName = appraisal.item.name,
-                                    price = appraisal.valuation.resalePrice,
+                                    price = appraisal.valuation.expected,
                                     imageUrl = file.absolutePath,
                                     date = System.currentTimeMillis(),
-                                    confidence = appraisal.confidence / 100f,
+                                    confidence = appraisal.confidence.score / 100f,
                                     category = appraisal.item.category ?: "Unknown",
                                     condition = appraisal.condition.grade
                                 )
@@ -139,8 +139,14 @@ class AppraisalViewModel(
         viewModelScope.launch {
             try {
                 val base64Image = withContext(Dispatchers.IO) {
-                    val bytes = imageFile.readBytes()
-                    "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                    val bitmap = android.graphics.BitmapFactory.decodeFile(imageFile.absolutePath)
+                        ?: error("Unable to decode image")
+                    val scaled = bitmap.scaleForUpload()
+                    val output = java.io.ByteArrayOutputStream()
+                    scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 82, output)
+                    if (scaled !== bitmap) scaled.recycle()
+                    bitmap.recycle()
+                    "data:image/jpeg;base64," + Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
                 }
                 analyzeCapturedImage(base64Image, imageFile, isGuest)
             } catch (e: Exception) {
@@ -172,4 +178,14 @@ class AppraisalViewModel(
             throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
+}
+
+private fun android.graphics.Bitmap.scaleForUpload(): android.graphics.Bitmap {
+    val maxDimension = 1600
+    val largest = maxOf(width, height)
+    if (largest <= maxDimension) return this
+    val ratio = maxDimension.toFloat() / largest
+    return android.graphics.Bitmap.createScaledBitmap(
+        this, (width * ratio).toInt(), (height * ratio).toInt(), true
+    )
 }
