@@ -27,7 +27,7 @@ android {
         val backendUrl =
             providers.gradleProperty("pricesnapBaseUrl").orNull
                 ?: System.getenv("PRICESNAP_BASE_URL")
-                ?: "https://pricesnap-server.vercel.app/"
+                ?: "https://pricesnapai.vercel.app/"
 
         buildConfigField(
             "String",
