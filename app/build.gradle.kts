@@ -19,15 +19,15 @@ android {
         minSdk = 26
         targetSdk = 36
 
-        versionCode = 10
-        versionName = "10.0"
+        versionCode = 11
+        versionName = "11.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val backendUrl =
             providers.gradleProperty("pricesnapBaseUrl").orNull
                 ?: System.getenv("PRICESNAP_BASE_URL")
-                ?: "https://pricesnapai.vercel.app/"
+                ?: "https://pricesnap-server.vercel.app/"
 
         buildConfigField(
             "String",
