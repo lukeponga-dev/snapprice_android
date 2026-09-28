@@ -1,73 +1,73 @@
 package dev.lukeponga.pricesnap.network
 
+import com.google.gson.Gson
+import dev.lukeponga.pricesnap.model.ApiError
 import dev.lukeponga.pricesnap.model.ValuationRequest
 import dev.lukeponga.pricesnap.model.ValuationResponse
-import dev.lukeponga.pricesnap.model.AnalysisResponse
+import kotlinx.coroutines.CancellationException
+import retrofit2.Response
 
 class AppraisalRepository(
     private val apiService: PriceSnapApiService = NetworkClient.apiService
 ) {
-    suspend fun ping(): Result<Boolean> {
-        return try {
-            val response = apiService.ping()
-            if (response.isSuccessful && response.body()?.ok == true) {
-                Result.success(true)
-            } else {
-                Result.failure(Exception("Backend returned HTTP ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
+    /** Configuration readiness only; a configured key does not prove Gemini quota. */
+    suspend fun checkConnection(): Result<Boolean> = try {
+        val response = apiService.connection()
+        val body = response.body()
+        if (response.isSuccessful && body?.ok == true &&
+            body.engine?.hasApiKey == true && body.engine.status == "configured") {
+            Result.success(true)
+        } else {
+            Result.failure(BackendException("The valuation engine is not configured. Please try again later."))
         }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(BackendException("Unable to connect to PriceSnap. Check your connection.", e))
     }
 
-    private fun getRawBase64AndMime(base64Image: String): Pair<String, String> {
-        if (base64Image.startsWith("data:")) {
-            val commaIndex = base64Image.indexOf(",")
-            if (commaIndex != -1) {
-                val prefix = base64Image.substring(0, commaIndex)
-                val rawBase64 = base64Image.substring(commaIndex + 1)
-                val mimeType = try {
-                    prefix.substringAfter("data:").substringBefore(";base64")
-                } catch (e: Exception) {
-                    "image/jpeg"
-                }
-                return Pair(rawBase64, mimeType)
-            }
+    suspend fun analyzeImage(base64Image: String): Result<ValuationResponse> = try {
+        val mime = if (base64Image.startsWith("data:"))
+            base64Image.substringAfter("data:").substringBefore(";base64,") else "image/jpeg"
+        val raw = if (base64Image.startsWith("data:")) base64Image.substringAfter(",") else base64Image
+        if (mime !in setOf("image/jpeg", "image/png", "image/webp")) {
+            throw BackendException("Please choose a JPEG, PNG or WebP image.")
         }
-        return Pair(base64Image, "image/jpeg")
+        if (raw.length > 4_000_000) throw BackendException("That photo is too large. Please choose a smaller image.")
+        val response = apiService.valuate(ValuationRequest(raw, mime))
+        if (response.isSuccessful) {
+            val body = response.body() ?: throw BackendException("PriceSnap returned an empty response.")
+            if (!body.ok || body.status !in setOf("success", "insufficient_evidence")) {
+                throw BackendException("PriceSnap returned an unexpected result. Please try again.")
+            }
+            Result.success(body)
+        } else {
+            Result.failure(BackendException(errorMessage(response)))
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: java.net.SocketTimeoutException) {
+        Result.failure(BackendException("The valuation timed out. Please try again.", e))
+    } catch (e: java.io.IOException) {
+        Result.failure(BackendException("Unable to connect to PriceSnap. Check your connection.", e))
+    } catch (e: Exception) {
+        Result.failure(if (e is BackendException) e else BackendException("Unable to read the valuation result. Please try again.", e))
     }
 
-    suspend fun analyzeImage(base64Image: String): Result<ValuationResponse> {
-        val (rawBase64, mime) = getRawBase64AndMime(base64Image)
-        return try {
-            val response = apiService.valuate(ValuationRequest(imageBase64 = rawBase64, mimeType = mime))
-            if (response.isSuccessful) {
-                response.body()?.let {
-                    Result.success(it)
-                } ?: Result.failure(Exception("Backend returned an empty response"))
-            } else {
-                Result.failure(Exception("Valuation failed: HTTP ${response.code()}"))
-            }
-        } catch (e: java.io.IOException) {
-            Result.failure(Exception("Unable to connect to PriceSnap", e))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun analyzeOnly(base64Image: String): Result<AnalysisResponse> {
-        val (rawBase64, mime) = getRawBase64AndMime(base64Image)
-        return try {
-            val response = apiService.analyze(ValuationRequest(imageBase64 = rawBase64, mimeType = mime))
-            if (response.isSuccessful) {
-                response.body()?.let {
-                    Result.success(it)
-                } ?: Result.failure(Exception("Backend returned an empty response"))
-            } else {
-                Result.failure(Exception("Analysis failed: HTTP ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
+    private fun errorMessage(response: Response<*>): String {
+        val code = runCatching {
+            Gson().fromJson(response.errorBody()?.string(), ApiError::class.java)?.code
+        }.getOrNull()
+        return when (code) {
+            "INVALID_REQUEST", "INVALID_IMAGE", "INVALID_MIME_TYPE" -> "We couldn't read that image. Please choose another photo."
+            "IMAGE_TOO_LARGE" -> "That photo is too large. Please choose a smaller image."
+            "IDENTIFICATION_UNCERTAIN" -> "We couldn't identify the item. Try a clearer photo."
+            "PROVIDER_RATE_LIMIT" -> "PriceSnap is busy. Please try again shortly."
+            "SERVICE_NOT_CONFIGURED" -> "The valuation engine is not configured. Please try again later."
+            "ANALYSIS_TIMEOUT" -> "The valuation timed out. Please try again."
+            else -> "The valuation couldn't be completed (HTTP ${response.code()}). Please try again."
         }
     }
 }
+
+class BackendException(message: String, cause: Throwable? = null) : Exception(message, cause)

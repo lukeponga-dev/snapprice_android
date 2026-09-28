@@ -1,6 +1,5 @@
 package dev.lukeponga.pricesnap.network
 
-import dev.lukeponga.pricesnap.model.AnalysisResponse
 import dev.lukeponga.pricesnap.model.ValuationRequest
 import dev.lukeponga.pricesnap.model.ValuationResponse
 import retrofit2.Response
@@ -16,8 +15,21 @@ interface PriceSnapApiService {
     @POST("api/valuate")
     suspend fun valuate(@Body request: ValuationRequest): Response<ValuationResponse>
 
-    @POST("api/analyze")
-    suspend fun analyze(@Body request: ValuationRequest): Response<AnalysisResponse>
+    @GET("api/connection")
+    suspend fun connection(): Response<ConnectionResponse>
 }
 
 data class PingResponse(val ok: Boolean)
+
+data class ConnectionResponse(
+    val ok: Boolean,
+    val engine: EngineStatus?
+)
+data class EngineStatus(
+    val status: String?,
+    val hasApiKey: Boolean,
+    val model: String?,
+    val engineVersion: String?,
+    val providerChecked: Boolean,
+    val geminiLatencyMs: Long?
+)
