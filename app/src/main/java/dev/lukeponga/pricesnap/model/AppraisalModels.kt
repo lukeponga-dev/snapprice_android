@@ -2,66 +2,43 @@ package dev.lukeponga.pricesnap.model
 
 import com.google.gson.annotations.SerializedName
 
-data class ImageRequest(
-    @SerializedName("imageBase64") val imageBase64: String
-)
+data class ImageRequest(@SerializedName("image") val image: String)
 
+/** Canonical response from pricesnapai /api/analyze. Prices are absent when evidence is insufficient. */
 data class AppraisalResponse(
-    @SerializedName("success") val success: Boolean,
-    @SerializedName("item") val item: ItemIdentity,
-    @SerializedName("condition") val condition: ConditionResult,
-    @SerializedName("valuation") val valuation: ValuationResult,
-    @SerializedName("confidence") val confidence: ConfidenceResult,
-    @SerializedName("comparables") val comparables: List<ComparableItem>,
-    @SerializedName("marketplaceRecommendation") val marketplaceRecommendation: String,
-    @SerializedName("summary") val summary: String,
-    @SerializedName("metadata") val metadata: Metadata?
-)
+    val ok: Boolean,
+    val status: String,
+    val product: ItemIdentity,
+    val valuation: ValuationResult,
+    val confidence: ConfidenceResult,
+    val evidence: EvidenceResult,
+    val market: MarketResult,
+    val warnings: List<String>?
+) {
+    val isPriced: Boolean get() = ok && status == "success" && (valuation.estimatedValue ?: 0.0) > 0.0
+}
 
 data class ItemIdentity(
-    @SerializedName("name") val name: String,
-    @SerializedName("brand") val brand: String?,
-    @SerializedName("model") val model: String?,
-    @SerializedName("variant") val variant: String?,
-    @SerializedName("category") val category: String?
+    val name: String,
+    val brand: String?,
+    val category: String?,
+    val summary: String,
+    val condition: ConditionResult
 )
 
-data class ConditionResult(
-    @SerializedName("score") val score: Int,
-    @SerializedName("grade") val grade: String,
-    @SerializedName("defects") val defects: List<String>
-)
+data class ConditionResult(val score: Int, val grade: String, val defects: List<String>)
 
 data class ValuationResult(
-    @SerializedName("low") val low: Double,
-    @SerializedName("expected") val expected: Double,
-    @SerializedName("high") val high: Double,
-    @SerializedName("currency") val currency: String = "NZD"
+    val estimatedValue: Double?,
+    val lowEstimate: Double?,
+    val highEstimate: Double?,
+    val currency: String
 )
 
-data class ConfidenceResult(
-    @SerializedName("score") val score: Int,
-    @SerializedName("level") val level: String
-)
+data class ConfidenceResult(val score: Double, val percentage: Int, val level: String)
 
-data class ComparableItem(
-    @SerializedName("title") val title: String,
-    @SerializedName("price") val price: Double,
-    @SerializedName("currency") val currency: String,
-    @SerializedName("source") val source: String,
-    @SerializedName("url") val url: String?,
-    @SerializedName("condition") val condition: String?,
-    @SerializedName("relevance") val relevance: Double,
-    @SerializedName("verified") val verified: Boolean
-)
+data class EvidenceResult(val sources: List<ComparableItem>)
 
-data class Metadata(
-    @SerializedName("model") val model: String?,
-    @SerializedName("generated_at") val generatedAt: String?
-)
+data class ComparableItem(val title: String, val priceNZD: Double, val platform: String, val url: String)
 
-data class ApiError(
-    @SerializedName("ok") val ok: Boolean? = false,
-    @SerializedName("error") val code: String? = null,
-    @SerializedName("message") val message: String? = null
-)
+data class MarketResult(@SerializedName("best_platform") val bestPlatform: String?)
