@@ -12,8 +12,8 @@ interface PriceSnapApiService {
     @GET("api/ping")
     suspend fun ping(): Response<PingResponse>
 
-    @POST("api/valuate")
-    suspend fun valuate(@Body request: ImageRequest): Response<AppraisalResponse>
+    @POST("api/analyze")
+    suspend fun analyze(@Body request: ImageRequest): Response<AppraisalResponse>
 }
 
-data class PingResponse(val ok: Boolean)
+data class PingResponse(val status: String, val service: String, val timestamp: Long)
