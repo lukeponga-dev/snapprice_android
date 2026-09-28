@@ -20,9 +20,27 @@ class AppraisalRepository(
         }
     }
 
+    private fun getRawBase64AndMime(base64Image: String): Pair<String, String> {
+        if (base64Image.startsWith("data:")) {
+            val commaIndex = base64Image.indexOf(",")
+            if (commaIndex != -1) {
+                val prefix = base64Image.substring(0, commaIndex)
+                val rawBase64 = base64Image.substring(commaIndex + 1)
+                val mimeType = try {
+                    prefix.substringAfter("data:").substringBefore(";base64")
+                } catch (e: Exception) {
+                    "image/jpeg"
+                }
+                return Pair(rawBase64, mimeType)
+            }
+        }
+        return Pair(base64Image, "image/jpeg")
+    }
+
     suspend fun analyzeImage(base64Image: String): Result<ValuationResponse> {
+        val (rawBase64, mime) = getRawBase64AndMime(base64Image)
         return try {
-            val response = apiService.valuate(ValuationRequest(imageBase64 = base64Image))
+            val response = apiService.valuate(ValuationRequest(imageBase64 = rawBase64, mimeType = mime))
             if (response.isSuccessful) {
                 response.body()?.let {
                     Result.success(it)
@@ -38,8 +56,9 @@ class AppraisalRepository(
     }
 
     suspend fun analyzeOnly(base64Image: String): Result<AnalysisResponse> {
+        val (rawBase64, mime) = getRawBase64AndMime(base64Image)
         return try {
-            val response = apiService.analyze(ValuationRequest(imageBase64 = base64Image))
+            val response = apiService.analyze(ValuationRequest(imageBase64 = rawBase64, mimeType = mime))
             if (response.isSuccessful) {
                 response.body()?.let {
                     Result.success(it)
