@@ -52,3 +52,39 @@ For the full details, including provider processing, retention, security, and yo
 
 - [Privacy Policy](PRIVACY_POLICY.md)
 - [Data Deletion Policy](DATA_DELETION_POLICY.md)
+
+## Internal backend integration (Option A)
+
+The app uses `https://pricesnap-server.vercel.app/` and sends
+`POST /api/valuate` with `imageBase64` and the real `mimeType`. Gemini runs
+inside [pricesnap-backend](https://github.com/lukeponga-dev/pricesnap-backend);
+no Gemini key belongs in the APK. The unused `/api/analyze` client call has
+been removed because this backend does not expose it.
+
+Deploy [backend PR #2](https://github.com/lukeponga-dev/pricesnap-backend/pull/2)
+and configure its server-side `GEMINI_API_KEY` before testing this Android branch.
+The app checks `/api/connection` for internal-engine configuration. This does
+not prove the provider key is valid or that quota is available.
+
+To use another deployment, build with
+`-PpricesnapBaseUrl=https://your-backend.example/` or set `PRICESNAP_BASE_URL`.
+Keep the trailing slash required by Retrofit. The default already targets the
+PriceSnap server. Read timeout is 120 seconds, total call timeout 150 seconds,
+and automatic connection retries are disabled to avoid duplicate valuation work.
+
+Results use fractional confidence (0–1) and condition scores out of 100.
+`insufficient_evidence` and missing/invalid canonical prices display as unpriced,
+with no zero-dollar fallback. Unpriced results are not added to priced history,
+and their Save Result button is disabled. Server warnings are shown on the result
+screen. Positive estimates are labelled market estimates, not verified sale prices.
+
+Validation commands (Android SDK and project-compatible JDK required):
+
+```bash
+bash gradlew :app:testDebugUnitTest --tests 'dev.lukeponga.pricesnap.model.ValuationResponseTest' --tests 'dev.lukeponga.pricesnap.network.AppraisalRepositoryTest'
+bash gradlew :app:assembleDebug
+```
+
+Manual acceptance: scan a real item against the configured deployment; inspect
+NZD price/range, confidence and condition. Also exercise an insufficient-evidence
+result and confirm it shows no price and creates no priced history entry.

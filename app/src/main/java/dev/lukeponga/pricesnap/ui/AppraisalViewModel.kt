@@ -66,7 +66,7 @@ class AppraisalViewModel(
 
     private suspend fun refreshBackendHealth() {
         _backendStatus.value = BackendStatus.Checking
-        val result = appraisalRepository.ping()
+        val result = appraisalRepository.checkConnection()
         _backendStatus.value = result.fold(
             onSuccess = { BackendStatus.Connected("PriceSnap", System.currentTimeMillis()) },
             onFailure = { BackendStatus.Error(it.message ?: "Unknown error") }
@@ -80,11 +80,12 @@ class AppraisalViewModel(
                 return@launch
             }
 
-            // Proactively check connection
-            val healthCheck = appraisalRepository.ping()
+            _uiState.value = AppraisalUiState.Loading
+            // Check internal engine configuration before uploading the image.
+            val healthCheck = appraisalRepository.checkConnection()
             if (healthCheck.isFailure) {
-                _backendStatus.value = BackendStatus.Offline
-                _uiState.value = AppraisalUiState.Error("PriceSnap server is currently unreachable. Please check your connection.")
+                _backendStatus.value = BackendStatus.Error(healthCheck.exceptionOrNull()?.message ?: "Connection failed")
+                _uiState.value = AppraisalUiState.Error(healthCheck.exceptionOrNull()?.message ?: "Unable to connect to PriceSnap.")
                 return@launch
             }
 
@@ -97,15 +98,16 @@ class AppraisalViewModel(
                 }
                 _backendStatus.value = BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
                 _uiState.value = AppraisalUiState.Success(appraisal)
-                imageFile?.let { file ->
+                // Unpriced scans are shown, but never saved as zero-dollar valuations.
+                if (appraisal.hasUsablePrice) imageFile?.let { file ->
                     repository.saveToHistory(
                         HistoryEntity(
                             id = UUID.randomUUID().toString(),
                             itemName = appraisal.item.name,
-                            price = appraisal.valuation.estimatedValue,
+                            price = appraisal.valuation.estimatedValue!!,
                             imageUrl = file.absolutePath,
                             date = System.currentTimeMillis(),
-                            confidence = appraisal.confidence.score / 100f,
+                            confidence = appraisal.confidenceFraction,
                             category = appraisal.item.category,
                             condition = appraisal.condition.grade
                         )
@@ -113,22 +115,11 @@ class AppraisalViewModel(
                 }
             }.onFailure { e ->
                 android.util.Log.e("AppraisalViewModel", "Appraisal failed", e)
-                _backendStatus.value = BackendStatus.Offline
                 _uiState.value = AppraisalUiState.Error(
-                    when (e) {
-                        is java.io.IOException -> "We couldn't connect to PriceSnap. Check your connection and try again."
-                        else -> "Appraisal failed. Please try again."
-                    }
+                    e.message ?: "Appraisal failed. Please try again."
                 )
             }
         }
-    }
-
-    private fun userMessageFor(code: Int): String = when (code) {
-        400 -> "We couldn't read that image. Please choose another photo and try again."
-        413 -> "That photo is too large. Please choose a smaller image and try again."
-        502, 503, 504 -> "The appraisal service is temporarily unavailable. Please try again shortly."
-        else -> "The appraisal couldn't be completed (HTTP $code). Please try again."
     }
 
     fun appraiseImage(imageFile: File, isGuest: Boolean = false) {
@@ -145,6 +136,8 @@ class AppraisalViewModel(
                     "data:image/jpeg;base64," + Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
                 }
                 analyzeCapturedImage(base64Image, imageFile, isGuest)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 android.util.Log.e("AppraisalViewModel", "Failed to prepare image for appraisal", e)
                 _uiState.value = AppraisalUiState.Error("We couldn't open that photo. Please choose another image.")

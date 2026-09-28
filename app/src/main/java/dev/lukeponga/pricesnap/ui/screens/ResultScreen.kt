@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,8 +54,8 @@ fun ResultScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Confidence Badge & Progress Bar
-                val confidence = (appraisal.confidence.score / 100f).coerceIn(0f, 1f)
-                val confidencePercent = appraisal.confidence.score
+                val confidence = appraisal.confidenceFraction
+                val confidencePercent = (confidence * 100).roundToInt()
                 val confidenceColor = when {
                     confidence >= 0.8f -> Color(0xFF22C55E) // Green
                     confidence >= 0.4f -> Color(0xFFF59E0B) // Amber
@@ -146,7 +146,7 @@ fun ResultScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = " /10",
+                                text = " /100",
                                 color = Color(0xFF9CA3AF),
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -199,19 +199,19 @@ fun ResultScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                text = "NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.estimatedValue)}",
+                                text = if (appraisal.hasUsablePrice) "NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.estimatedValue)}" else "Not enough market evidence",
                                 color = Color(0xFF22C55E),
-                                fontSize = 30.sp,
+                                fontSize = if (appraisal.hasUsablePrice) 30.sp else 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = if (appraisal.valuation.method == "market_evidence") Color(0xFF072A20) else Color(0xFF2E200C),
-                                border = BorderStroke(1.dp, if (appraisal.valuation.method == "market_evidence") Color(0xFF0F4E3C) else Color(0xFF5D401D))
+                                color = if (appraisal.hasUsablePrice) Color(0xFF072A20) else Color(0xFF2E200C),
+                                border = BorderStroke(1.dp, if (appraisal.hasUsablePrice) Color(0xFF0F4E3C) else Color(0xFF5D401D))
                             ) {
                                 Text(
-                                    text = if (appraisal.valuation.method == "market_evidence") "Market Verified" else "AI Estimate",
-                                    color = if (appraisal.valuation.method == "market_evidence") Color(0xFF34D399) else Color(0xFFF59E0B),
+                                    text = if (appraisal.hasUsablePrice) "Market estimate" else "Unpriced",
+                                    color = if (appraisal.hasUsablePrice) Color(0xFF34D399) else Color(0xFFF59E0B),
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     fontWeight = FontWeight.Bold
@@ -271,10 +271,14 @@ fun ResultScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Low: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.low)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
-                    Text(text = "High: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.high)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                    Text(text = if (appraisal.hasUsablePrice) "Low: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.low)}" else "Low: unavailable", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                    Text(text = if (appraisal.hasUsablePrice) "High: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.high)}" else "High: unavailable", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
                 }
             }
+        }
+
+        appraisal.warnings.orEmpty().forEach { warning ->
+            Text(warning, color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
         }
 
         // 5. Bottom Action Buttons
@@ -301,6 +305,7 @@ fun ResultScreen(
 
             Button(
                 onClick = onSaveResult,
+                enabled = appraisal.hasUsablePrice,
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp),
