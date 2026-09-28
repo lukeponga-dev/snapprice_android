@@ -2,7 +2,6 @@ package dev.lukeponga.pricesnap.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,11 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.lukeponga.pricesnap.model.AppraisalResponse
+import dev.lukeponga.pricesnap.model.ValuationResponse
 
 import androidx.compose.ui.res.painterResource
 import dev.lukeponga.pricesnap.R
@@ -27,12 +25,11 @@ import dev.lukeponga.pricesnap.R
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ResultScreen(
-    appraisal: AppraisalResponse,
+    appraisal: ValuationResponse,
     onScanAgain: () -> Unit,
     onSaveResult: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val uriHandler = LocalUriHandler.current
 
     Column(
         modifier = Modifier
@@ -57,8 +54,8 @@ fun ResultScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Confidence Badge & Progress Bar
-                val confidence = appraisal.confidence.score.toFloat().coerceIn(0f, 1f)
-                val confidencePercent = appraisal.confidence.percentage
+                val confidence = (appraisal.confidence.score / 100f).coerceIn(0f, 1f)
+                val confidencePercent = appraisal.confidence.score
                 val confidenceColor = when {
                     confidence >= 0.8f -> Color(0xFF22C55E) // Green
                     confidence >= 0.4f -> Color(0xFFF59E0B) // Amber
@@ -70,7 +67,7 @@ fun ResultScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = appraisal.product.name,
+                        text = appraisal.item.name,
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
@@ -87,7 +84,7 @@ fun ResultScreen(
                     )
 
                     Text(
-                        text = "${appraisal.product.brand ?: "Generic"} • ${appraisal.product.category ?: "General"}",
+                        text = "${appraisal.item.brand ?: "Generic"} • ${appraisal.item.category ?: "General"}",
                         color = Color(0xFF9CA3AF),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -143,7 +140,7 @@ fun ResultScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = "${appraisal.product.condition.score}",
+                                text = "${appraisal.condition.score}",
                                 color = Color.White,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold
@@ -157,9 +154,8 @@ fun ResultScreen(
                         }
                         
                         // Condition Grade Badge
-                        val grade = appraisal.product.condition.grade
                         Text(
-                            text = "Grade $grade",
+                            text = "Grade ${appraisal.condition.grade}",
                             color = Color(0xFF34D399),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
@@ -167,42 +163,15 @@ fun ResultScreen(
                         )
                     }
 
-                    // Summary Description
+                    // Notes Description
                     Text(
-                        text = "A thorough assessment based on the visual evidence provided.",
+                        text = appraisal.condition.notes.joinToString(". "),
                         color = Color(0xFF9CA3AF),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .weight(1f)
                             .padding(start = 16.dp)
                     )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Defect Chips
-                val defects = appraisal.product.condition.defects
-                if (defects.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        defects.forEach { defect ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color(0xFF072A20),
-                                border = BorderStroke(1.dp, Color(0xFF0F4E3C))
-                            ) {
-                                Text(
-                                    text = defect.uppercase(),
-                                    color = Color(0xFF34D399),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -222,65 +191,34 @@ fun ResultScreen(
                 ) {
                     Column {
                         Text(
-                            text = "RECOMMENDED RESALE PRICE",
+                            text = "ESTIMATED VALUE",
                             color = Color(0xFF6B8078),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                        text = appraisal.valuation.estimatedValue?.takeIf { appraisal.isPriced }?.let {
-                            "NZ\$${String.format(java.util.Locale.US, "%.0f", it)}"
-                        } ?: "Price unavailable",
-                            color = Color(0xFF22C55E),
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "BEST PLATFORM",
-                            color = Color(0xFF6B8078),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF072A20),
-                            border = BorderStroke(1.dp, Color(0xFF0F4E3C))
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                text = appraisal.market.bestPlatform ?: "No recommendation",
-                                color = Color(0xFF34D399),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                text = "NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.estimatedValue)}",
+                                color = Color(0xFF22C55E),
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold
                             )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (appraisal.valuation.method == "market_evidence") Color(0xFF072A20) else Color(0xFF2E200C),
+                                border = BorderStroke(1.dp, if (appraisal.valuation.method == "market_evidence") Color(0xFF0F4E3C) else Color(0xFF5D401D))
+                            ) {
+                                Text(
+                                    text = if (appraisal.valuation.method == "market_evidence") "Market Verified" else "AI Estimate",
+                                    color = if (appraisal.valuation.method == "market_evidence") Color(0xFF34D399) else Color(0xFFF59E0B),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = Color(0xFF143029))
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_trends),
-                        contentDescription = null,
-                        tint = Color(0xFF9CA3AF),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = appraisal.product.summary,
-                        color = Color(0xFF9CA3AF),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
                 }
             }
         }
@@ -318,7 +256,7 @@ fun ResultScreen(
                         border = BorderStroke(1.dp, Color(0xFF0F4E3C))
                     ) {
                         Text(
-                            text = "${appraisal.evidence.sources.size} found",
+                            text = "${appraisal.comparables.size} found",
                             color = Color(0xFF34D399),
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -333,26 +271,8 @@ fun ResultScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    if (appraisal.isPriced) {
-                        appraisal.valuation.lowEstimate?.let {
-                            Text(text = "Low: NZ\$${String.format(java.util.Locale.US, "%.0f", it)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
-                        }
-                        appraisal.valuation.highEstimate?.let {
-                            Text(text = "High: NZ\$${String.format(java.util.Locale.US, "%.0f", it)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
-                        }
-                    } else {
-                        Text("No usable NZD second-hand comparables were found. Try a clearer model label or another item.", color = Color(0xFF9CA3AF))
-                    }
-                }
-                appraisal.evidence.sources.take(5).forEach { source ->
-                    Text(
-                        text = "${source.platform} · NZ\$${String.format(java.util.Locale.US, "%.0f", source.priceNZD)} · ${source.title}",
-                        color = Color(0xFF34D399),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth().clickable {
-                            if (source.url.startsWith("https://")) uriHandler.openUri(source.url)
-                        }.padding(vertical = 6.dp)
-                    )
+                    Text(text = "Low: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.low)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                    Text(text = "High: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.high)}", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -387,8 +307,9 @@ fun ResultScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E))
             ) {
-                Text(if (appraisal.isPriced) "View History" else "Done", fontWeight = FontWeight.Bold, color = Color(0xFF042116))
+                Text("Save Result", fontWeight = FontWeight.Bold, color = Color(0xFF042116))
             }
         }
     }
 }
+

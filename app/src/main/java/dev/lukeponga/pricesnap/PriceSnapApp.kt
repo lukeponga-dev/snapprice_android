@@ -81,6 +81,8 @@ class PriceSnapApp : Application() {
                 recaptchaClient = Recaptcha.fetchClient(this@PriceSnapApp, "6LfKJsUtAAAAADXSiynxypRKf5DhLS1BiIMOFOcA")
             } catch(e: RecaptchaException) {
                 android.util.Log.e("PriceSnapApp", "Failed to fetch Recaptcha client", e)
+            } catch(e: Exception) {
+                android.util.Log.w("PriceSnapApp", "Recaptcha initialization skipped in emulator: ${e.message}")
             }
         }
     }
