@@ -67,6 +67,10 @@ android {
             )
 
             signingConfig = signingConfigs.getByName("release")
+
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
 
         debug {
