@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import dev.lukeponga.pricesnap.data.ScanPreferenceManager
 import dev.lukeponga.pricesnap.history.HistoryEntity
 import dev.lukeponga.pricesnap.history.HistoryRepository
-import dev.lukeponga.pricesnap.model.AppraisalResponse
 import dev.lukeponga.pricesnap.network.AppraisalRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +68,7 @@ class AppraisalViewModel(
         try {
             val response = appraisalRepository.ping()
             val body = response.body()
-            _backendStatus.value = if (response.isSuccessful && body?.ok == true) {
+            _backendStatus.value = if (response.isSuccessful && body?.status == "ok") {
                 BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
             } else {
                 BackendStatus.Error("Backend returned HTTP ${response.code()}")
@@ -94,23 +93,25 @@ class AppraisalViewModel(
                 val response = appraisalRepository.analyzeImage(base64Image)
                 if (response.isSuccessful) {
                     val appraisal = response.body()
-                    if (appraisal != null) {
+                    if (appraisal != null && appraisal.ok &&
+                        (appraisal.status == "success" || appraisal.status == "insufficient_evidence")) {
                         if (isGuest) {
                             scanPreferenceManager.incrementScanCount()
                         }
                         _backendStatus.value = BackendStatus.Connected("PriceSnap", System.currentTimeMillis())
                         _uiState.value = AppraisalUiState.Success(appraisal)
-                        imageFile?.let { file ->
+                        val price = appraisal.valuation.estimatedValue
+                        if (appraisal.isPriced && price != null) imageFile?.let { file ->
                             repository.saveToHistory(
                                 HistoryEntity(
                                     id = UUID.randomUUID().toString(),
-                                    itemName = appraisal.item.name,
-                                    price = appraisal.valuation.expected,
+                                    itemName = appraisal.product.name,
+                                    price = price,
                                     imageUrl = file.absolutePath,
                                     date = System.currentTimeMillis(),
-                                    confidence = appraisal.confidence.score / 100f,
-                                    category = appraisal.item.category ?: "Unknown",
-                                    condition = appraisal.condition.grade
+                                    confidence = appraisal.confidence.score.toFloat(),
+                                    category = appraisal.product.category ?: "Unknown",
+                                    condition = appraisal.product.condition.grade
                                 )
                             )
                         }
@@ -131,6 +132,8 @@ class AppraisalViewModel(
     private fun userMessageFor(code: Int): String = when (code) {
         400 -> "We couldn't read that image. Please choose another photo and try again."
         413 -> "That photo is too large. Please choose a smaller image and try again."
+        422 -> "We couldn't identify the item clearly. Try a photo of its model label."
+        429 -> "The appraisal service is busy. Please try again shortly."
         502, 503, 504 -> "The appraisal service is temporarily unavailable. Please try again shortly."
         else -> "The appraisal couldn't be completed (HTTP $code). Please try again."
     }
@@ -143,9 +146,15 @@ class AppraisalViewModel(
                         ?: error("Unable to decode image")
                     val scaled = bitmap.scaleForUpload()
                     val output = java.io.ByteArrayOutputStream()
-                    scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 82, output)
+                    var quality = 82
+                    do {
+                        output.reset()
+                        scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, quality, output)
+                        quality -= 12
+                    } while (output.size() > 3_000_000 && quality >= 34)
                     if (scaled !== bitmap) scaled.recycle()
                     bitmap.recycle()
+                    require(output.size() <= 3_000_000) { "Image exceeds the upload limit" }
                     "data:image/jpeg;base64," + Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
                 }
                 analyzeCapturedImage(base64Image, imageFile, isGuest)
