@@ -197,10 +197,14 @@ fun ResultScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             Text(
                                 text = if (appraisal.hasUsablePrice) "NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.estimatedValue)}" else "Not enough market evidence",
-                                color = Color(0xFF22C55E),
+                                modifier = Modifier.fillMaxWidth(),
+                                color = if (appraisal.hasUsablePrice) Color(0xFF22C55E) else Color(0xFFF59E0B),
                                 fontSize = if (appraisal.hasUsablePrice) 30.sp else 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -211,6 +215,8 @@ fun ResultScreen(
                             ) {
                                 Text(
                                     text = if (appraisal.hasUsablePrice) "Market estimate" else "Unpriced",
+                                    maxLines = 1,
+                                    softWrap = false,
                                     color = if (appraisal.hasUsablePrice) Color(0xFF34D399) else Color(0xFFF59E0B),
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
