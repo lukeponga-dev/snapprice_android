@@ -22,7 +22,7 @@ class AppraisalRepositoryTest {
              "valuation":{"currency":"NZD","estimatedValue":null,"low":null,"high":null},
              "confidence":{"score":0,"level":"low"},"comparables":[],"generatedAt":"2026-09-29"}
         """, ValuationResponse::class.java))
-        override suspend fun ping(): Response<PingResponse> = Response.success(PingResponse(true))
+        override suspend fun ping(): Response<PingResponse> = Response.success(PingResponse("ok", "pricesnap-backend"))
         override suspend fun connection(): Response<ConnectionResponse> = Response.success(
             ConnectionResponse(true, EngineStatus("configured", true, "gemini-flash-latest", "internal-1.0.0", false, null))
         )
@@ -41,6 +41,23 @@ class AppraisalRepositoryTest {
         assertEquals(ValuationRequest("aGVsbG8=", "image/png"), service.request)
         assertFalse(result.hasUsablePrice)
         assertNull(result.valuation.estimatedValue)
+    }
+
+    @Test fun acceptsHeuristicResultsFromServer() = runTest {
+        val service = FakeService()
+        service.result = Response.success(service.result.body()!!.copy(status = "heuristic"))
+        val result = AppraisalRepository(service).analyzeImage("aGVsbG8=").getOrThrow()
+        assertTrue(result.isHeuristic)
+        assertFalse(result.hasUsablePrice)
+    }
+
+    @Test fun parsesProductionPingResponse() {
+        val ping = Gson().fromJson(
+            """{"status":"ok","service":"pricesnap-backend","timestamp":1790819863643}""",
+            PingResponse::class.java
+        )
+        assertTrue(ping.ok)
+        assertEquals("pricesnap-backend", ping.service)
     }
 
     @Test fun decodesSafeBackendErrorCode() = runTest {

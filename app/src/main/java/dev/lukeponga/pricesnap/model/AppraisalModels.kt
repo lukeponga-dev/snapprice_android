@@ -18,8 +18,18 @@ data class ValuationResponse(
     @SerializedName("comparables") val comparables: List<ComparableItem>,
     @SerializedName("generatedAt") val generatedAt: String
 ) {
+    val isHeuristic: Boolean
+        get() = status == "heuristic"
+
+    val priceLabel: String
+        get() = when {
+            !hasUsablePrice -> "Unpriced"
+            isHeuristic -> "AI estimate"
+            else -> "Market estimate"
+        }
+
     val hasUsablePrice: Boolean
-        get() = ok && status == "success" && valuation.currency == "NZD" &&
+        get() = ok && status in setOf("success", "heuristic") && valuation.currency == "NZD" &&
             listOf(valuation.estimatedValue, valuation.low, valuation.high)
                 .all { it != null && it.isFinite() && it > 0 } &&
             valuation.low!! <= valuation.estimatedValue!! &&

@@ -97,6 +97,26 @@ class ValuationResponseTest {
         }
     """.trimIndent()
 
+    @Test fun heuristicPricesAreUsableAndClearlyLabelled() {
+        val result = gson.fromJson(unpricedJson("heuristic", "500"), ValuationResponse::class.java)
+            .copy(confidence = ConfidenceResult(0.35, "low"))
+        assertTrue(result.hasUsablePrice)
+        assertTrue(result.isHeuristic)
+        assertEquals("AI estimate", result.priceLabel)
+        assertEquals(0.35f, result.confidenceFraction, 0.001f)
+    }
+
+    @Test fun invalidHeuristicPricesRemainUnpriced() {
+        for (price in listOf("null", "0", "-10")) {
+            val result = gson.fromJson(unpricedJson("heuristic", price), ValuationResponse::class.java)
+            assertFalse(result.hasUsablePrice)
+            assertEquals("Unpriced", result.priceLabel)
+        }
+        val result = gson.fromJson(unpricedJson("heuristic", "500"), ValuationResponse::class.java)
+        assertFalse(result.copy(valuation = result.valuation.copy(low = 600.0)).hasUsablePrice)
+        assertFalse(result.copy(valuation = result.valuation.copy(currency = "USD")).hasUsablePrice)
+    }
+
     @Test fun nullPricesRemainUnpriced() {
         val result = gson.fromJson(unpricedJson(), ValuationResponse::class.java)
         assertNull(result.valuation.estimatedValue)

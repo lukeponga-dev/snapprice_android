@@ -214,7 +214,7 @@ fun ResultScreen(
                                 border = BorderStroke(1.dp, if (appraisal.hasUsablePrice) Color(0xFF0F4E3C) else Color(0xFF5D401D))
                             ) {
                                 Text(
-                                    text = if (appraisal.hasUsablePrice) "Market estimate" else "Unpriced",
+                                    text = appraisal.priceLabel,
                                     maxLines = 1,
                                     softWrap = false,
                                     color = if (appraisal.hasUsablePrice) Color(0xFF34D399) else Color(0xFFF59E0B),
@@ -227,6 +227,14 @@ fun ResultScreen(
                     }
                 }
             }
+        }
+
+        if (appraisal.isHeuristic) {
+            Text(
+                "This AI estimate uses general market knowledge, not verified live listings.",
+                color = Color(0xFFF59E0B),
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
 
         // 4. Marketplace Comparison Section
@@ -279,6 +287,32 @@ fun ResultScreen(
                 ) {
                     Text(text = if (appraisal.hasUsablePrice) "Low: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.low)}" else "Low: unavailable", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
                     Text(text = if (appraisal.hasUsablePrice) "High: NZ\$${String.format(java.util.Locale.US, "%.0f", appraisal.valuation.high)}" else "High: unavailable", color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        if (appraisal.comparables.isEmpty()) {
+            Text("No comparable listings returned.", color = Color(0xFF9CA3AF))
+        }
+        appraisal.comparables.forEach { comparable ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1D19))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(comparable.title, color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "${comparable.source} - ${comparable.currency} ${String.format(java.util.Locale.US, "%.2f", comparable.price)}",
+                        color = Color(0xFF34D399)
+                    )
+                    comparable.url?.takeIf { it.isNotBlank() }?.let { url ->
+                        androidx.compose.foundation.text.selection.SelectionContainer {
+                            Text(url, color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
                 }
             }
         }

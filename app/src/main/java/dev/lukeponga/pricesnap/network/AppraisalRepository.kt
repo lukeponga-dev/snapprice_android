@@ -37,7 +37,7 @@ class AppraisalRepository(
         val response = apiService.valuate(ValuationRequest(raw, mime))
         if (response.isSuccessful) {
             val body = response.body() ?: throw BackendException("PriceSnap returned an empty response.")
-            if (!body.ok || body.status !in setOf("success", "insufficient_evidence")) {
+            if (!body.ok || body.status !in setOf("success", "heuristic", "insufficient_evidence")) {
                 throw BackendException("PriceSnap returned an unexpected result. Please try again.")
             }
             Result.success(body)
@@ -65,6 +65,9 @@ class AppraisalRepository(
             "PROVIDER_RATE_LIMIT" -> "PriceSnap is busy. Please try again shortly."
             "SERVICE_NOT_CONFIGURED" -> "The valuation engine is not configured. Please try again later."
             "ANALYSIS_TIMEOUT" -> "The valuation timed out. Please try again."
+            "PROVIDER_MODEL_UNAVAILABLE" -> "The valuation service is temporarily unavailable. Please try again later."
+            "INSUFFICIENT_EVIDENCE" -> "Not enough market evidence was found. Try another photo or item."
+            "UNAUTHORIZED" -> "Please sign in again to use PriceSnap."
             else -> "The valuation couldn't be completed (HTTP ${response.code()}). Please try again."
         }
     }

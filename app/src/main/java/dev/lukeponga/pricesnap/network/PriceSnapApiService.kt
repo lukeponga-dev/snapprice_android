@@ -19,7 +19,9 @@ interface PriceSnapApiService {
     suspend fun connection(): Response<ConnectionResponse>
 }
 
-data class PingResponse(val ok: Boolean)
+data class PingResponse(val status: String?, val service: String? = null, val timestamp: Long? = null) {
+    val ok: Boolean get() = status == "ok"
+}
 
 data class ConnectionResponse(
     val ok: Boolean,

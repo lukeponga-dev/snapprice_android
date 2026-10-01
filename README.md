@@ -61,8 +61,7 @@ inside [pricesnap-backend](https://github.com/lukeponga-dev/pricesnap-backend);
 no Gemini key belongs in the APK. The unused `/api/analyze` client call has
 been removed because this backend does not expose it.
 
-Deploy [backend PR #2](https://github.com/lukeponga-dev/pricesnap-backend/pull/2)
-and configure its server-side `GEMINI_API_KEY` before testing this Android branch.
+Configure the backend's server-side `GEMINI_API_KEY` before testing another deployment.
 The app checks `/api/connection` for internal-engine configuration. This does
 not prove the provider key is valid or that quota is available.
 
@@ -76,7 +75,11 @@ Results use fractional confidence (0–1) and condition scores out of 100.
 `insufficient_evidence` and missing/invalid canonical prices display as unpriced,
 with no zero-dollar fallback. Unpriced results are not added to priced history,
 and their Save Result button is disabled. Server warnings are shown on the result
-screen. Positive estimates are labelled market estimates, not verified sale prices.
+screen. Grounded results are labelled Market estimate; `heuristic` results are
+accepted and labelled AI estimate with an explanation that they use general market
+knowledge rather than verified live listings. Both require valid positive NZD
+prices and an ordered range before saving. The result screen shows each returned
+comparable's title, source, original currency, price, and URL.
 
 Validation commands (Android SDK and project-compatible JDK required):
 
