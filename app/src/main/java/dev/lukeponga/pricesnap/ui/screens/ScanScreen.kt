@@ -19,9 +19,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +35,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +56,7 @@ fun ScanScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val imageCapture = remember { ImageCapture.Builder().build() }
+    var isFlashOn by rememberSaveable { mutableStateOf(false) }
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -210,6 +215,38 @@ fun ScanScreen(
                     color = bracketColor,
                     style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
+            }
+
+            // Top-Right Camera Flash Toggle
+            if (hasCameraPermission) {
+                IconButton(
+                    onClick = {
+                        val next = !isFlashOn
+                        isFlashOn = next
+                        CameraController.setFlashEnabled(next, imageCapture)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(if (isFlashOn) Color(0xFF14463A) else Color(0x99000000))
+                        .border(
+                            BorderStroke(
+                                1.5.dp,
+                                if (isFlashOn) Color(0xFF34D399) else Color(0x33FFFFFF)
+                            ),
+                            CircleShape
+                        )
+                        .testTag("camera_flash_toggle")
+                ) {
+                    Icon(
+                        imageVector = if (isFlashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                        contentDescription = if (isFlashOn) "Turn off camera flash" else "Turn on camera flash",
+                        tint = if (isFlashOn) Color(0xFFFBBF24) else Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
 

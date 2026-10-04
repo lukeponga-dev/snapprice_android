@@ -51,7 +51,6 @@ fun SettingsScreen(
     var region by rememberSaveable { mutableStateOf("New Zealand") }
     var defaultCondition by rememberSaveable { mutableStateOf("Used") }
     var autoSaveScans by rememberSaveable { mutableStateOf(true) }
-    var cameraFlash by rememberSaveable { mutableStateOf("Auto") }
     var hapticFeedback by rememberSaveable { mutableStateOf(true) }
     var notificationsEnabled by rememberSaveable { mutableStateOf(true) }
 
@@ -59,7 +58,6 @@ fun SettingsScreen(
     var showCurrencyDialog by remember { mutableStateOf(false) }
     var showRegionDialog by remember { mutableStateOf(false) }
     var showConditionDialog by remember { mutableStateOf(false) }
-    var showFlashDialog by remember { mutableStateOf(false) }
 
     // Privacy & Support States
     var showManageDataDialog by remember { mutableStateOf(false) }
@@ -234,13 +232,6 @@ fun SettingsScreen(
 
             // Camera & Feedback Group
             SettingsGroup(title = "Camera & Interface") {
-                SettingActionRow(
-                    label = "Camera Flash",
-                    value = cameraFlash,
-                    icon = Icons.Default.FlashOn,
-                    onClick = { showFlashDialog = true }
-                )
-                SettingsDivider()
                 SettingSwitchRow(
                     label = "Haptic Feedback",
                     subtitle = "Vibrate on successful scan",
@@ -369,16 +360,6 @@ fun SettingsScreen(
             selectedOption = defaultCondition,
             onOptionSelected = { defaultCondition = it; showConditionDialog = false },
             onDismiss = { showConditionDialog = false }
-        )
-    }
-
-    if (showFlashDialog) {
-        SingleChoiceListDialog(
-            title = "Camera Flash",
-            options = listOf("Auto", "On", "Off"),
-            selectedOption = cameraFlash,
-            onOptionSelected = { cameraFlash = it; showFlashDialog = false },
-            onDismiss = { showFlashDialog = false }
         )
     }
 

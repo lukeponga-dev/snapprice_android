@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -20,6 +21,10 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 object CameraController {
+    private var camera: Camera? = null
+    var isFlashOn: Boolean = false
+        private set
+
     fun bindCameraPreview(
         context: Context,
         lifecycleOwner: LifecycleOwner,
@@ -35,19 +40,45 @@ object CameraController {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
+                val boundCamera = cameraProvider.bindToLifecycle(
                     lifecycleOwner,
                     CameraSelector.DEFAULT_BACK_CAMERA,
                     preview,
                     imageCapture
                 )
+                camera = boundCamera
+                if (isFlashOn) {
+                    runCatching {
+                        if (boundCamera.cameraInfo.hasFlashUnit()) {
+                            boundCamera.cameraControl.enableTorch(true)
+                        }
+                        imageCapture.flashMode = ImageCapture.FLASH_MODE_ON
+                    }
+                }
             } catch (exc: Exception) {
                 onError(exc)
             }
         }, ContextCompat.getMainExecutor(context))
     }
 
+    fun setFlashEnabled(enabled: Boolean, imageCapture: ImageCapture? = null) {
+        isFlashOn = enabled
+        imageCapture?.flashMode = if (enabled) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
+        camera?.let { cam ->
+            runCatching {
+                if (cam.cameraInfo.hasFlashUnit()) {
+                    cam.cameraControl.enableTorch(enabled)
+                }
+            }
+        }
+    }
+
     fun unbindCamera(context: Context) {
+        runCatching {
+            camera?.cameraControl?.enableTorch(false)
+        }
+        camera = null
+        isFlashOn = false
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
             runCatching { future.get().unbindAll() }
