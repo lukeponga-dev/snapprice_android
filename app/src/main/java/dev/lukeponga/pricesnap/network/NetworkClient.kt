@@ -1,6 +1,9 @@
 package dev.lukeponga.pricesnap.network
 
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.appcheck.FirebaseAppCheck
 import dev.lukeponga.pricesnap.BuildConfig
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -19,12 +22,33 @@ object NetworkClient {
         }
     }
 
+    private val appCheckInterceptor = Interceptor { chain ->
+        val originalRequest = chain.request()
+        val requestBuilder = originalRequest.newBuilder()
+
+        try {
+            val appCheck = FirebaseAppCheck.getInstance()
+            val tokenTask = appCheck.getAppCheckToken(false)
+            val tokenResult = Tasks.await(tokenTask, 5, TimeUnit.SECONDS)
+            val token = tokenResult?.token
+            if (!token.isNullOrBlank()) {
+                requestBuilder.header("X-Firebase-AppCheck", token)
+            }
+        } catch (e: Exception) {
+            // App Check token unavailable or timed out; proceed with request to maintain API availability
+            android.util.Log.d("NetworkClient", "App Check token attachment skipped: ${e.message}")
+        }
+
+        chain.proceed(requestBuilder.build())
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)
         .callTimeout(150, TimeUnit.SECONDS)
         .retryOnConnectionFailure(false)
         .writeTimeout(60, TimeUnit.SECONDS)
+        .addInterceptor(appCheckInterceptor)
         .addInterceptor(loggingInterceptor)
         .build()
 
