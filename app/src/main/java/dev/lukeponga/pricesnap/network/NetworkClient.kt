@@ -34,7 +34,7 @@ object NetworkClient {
             if (!token.isNullOrBlank()) {
                 requestBuilder.header("X-Firebase-AppCheck", token)
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // App Check token unavailable or timed out; proceed with request to maintain API availability
             android.util.Log.d("NetworkClient", "App Check token attachment skipped: ${e.message}")
         }

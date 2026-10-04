@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -57,6 +58,9 @@ fun ScanScreen(
     val coroutineScope = rememberCoroutineScope()
     val imageCapture = remember { ImageCapture.Builder().build() }
     var isFlashOn by rememberSaveable { mutableStateOf(false) }
+    var isCameraReady by remember { mutableStateOf(false) }
+    var cameraErrorMessage by remember { mutableStateOf<String?>(null) }
+    var deviceHasFlash by remember { mutableStateOf(false) }
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -71,6 +75,9 @@ fun ScanScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
+        if (isGranted) {
+            cameraErrorMessage = null
+        }
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -119,24 +126,75 @@ fun ScanScreen(
                 .background(Color(0xFF0C1D19))
                 .border(BorderStroke(1.5.dp, Color(0xFF14463A)), RoundedCornerShape(26.dp))
         ) {
-            if (hasCameraPermission) {
+            if (hasCameraPermission && cameraErrorMessage == null) {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { ctx ->
                         PreviewView(ctx).apply {
                             scaleType = PreviewView.ScaleType.FILL_CENTER
-                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                            implementationMode = PreviewView.ImplementationMode.PERFORMANCE
+                            CameraController.bindCameraPreview(
+                                context = context,
+                                lifecycleOwner = lifecycleOwner,
+                                previewView = this,
+                                imageCapture = imageCapture,
+                                onCameraBound = { hasFlash ->
+                                    isCameraReady = true
+                                    deviceHasFlash = hasFlash
+                                    cameraErrorMessage = null
+                                },
+                                onError = { error ->
+                                    isCameraReady = false
+                                    cameraErrorMessage = error.message ?: "Camera unavailable on this device"
+                                }
+                            )
                         }
                     },
-                    update = { previewView ->
-                        CameraController.bindCameraPreview(
-                            context = context,
-                            lifecycleOwner = lifecycleOwner,
-                            previewView = previewView,
-                            imageCapture = imageCapture
-                        )
-                    }
+                    update = { /* Avoid rebinding camera on every recomposition */ }
                 )
+            } else if (hasCameraPermission && cameraErrorMessage != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            tint = Color(0xFFFBBF24),
+                            modifier = Modifier.size(44.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Camera preview unavailable",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "No active camera found. You can still scan by uploading an item image from your gallery.",
+                            color = Color(0xFF9CA3AF),
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Upload from gallery", color = Color(0xFF042116), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             } else {
                 Box(
                     modifier = Modifier
@@ -218,12 +276,16 @@ fun ScanScreen(
             }
 
             // Top-Right Camera Flash Toggle
-            if (hasCameraPermission) {
+            if (hasCameraPermission && cameraErrorMessage == null) {
                 IconButton(
                     onClick = {
-                        val next = !isFlashOn
-                        isFlashOn = next
-                        CameraController.setFlashEnabled(next, imageCapture)
+                        if (!deviceHasFlash) {
+                            Toast.makeText(context, "Flash is not available on this device", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val next = !isFlashOn
+                            isFlashOn = next
+                            CameraController.setFlashEnabled(next, imageCapture)
+                        }
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -261,24 +323,33 @@ fun ScanScreen(
                 .clip(CircleShape)
                 .background(Color(0xFF22C55E))
                 .clickable {
-                    coroutineScope.launch {
-                        try {
-                            val base64Image = CameraController.captureAndEncodeImage(
-                                imageCapture = imageCapture,
-                                context = context
-                            )
-                            val file = java.io.File(context.cacheDir, "scan_${System.currentTimeMillis()}.jpg")
-                            val bytes = android.util.Base64.decode(base64Image.substringAfter(","), android.util.Base64.DEFAULT)
-                            file.writeBytes(bytes)
+                    if (!isCameraReady || cameraErrorMessage != null) {
+                        Toast.makeText(
+                            context,
+                            "Camera is not available. Please choose a photo from your gallery.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    } else {
+                        coroutineScope.launch {
+                            try {
+                                val base64Image = CameraController.captureAndEncodeImage(
+                                    imageCapture = imageCapture,
+                                    context = context
+                                )
+                                val file = java.io.File(context.cacheDir, "scan_${System.currentTimeMillis()}.jpg")
+                                val bytes = android.util.Base64.decode(base64Image.substringAfter(","), android.util.Base64.DEFAULT)
+                                file.writeBytes(bytes)
 
-                            viewModel.analyzeCapturedImage(base64Image, file, isGuest)
-                            onScanCompleted()
-                        } catch (e: Exception) {
-                            Toast.makeText(
-                                context,
-                                "Capture failed: ${e.localizedMessage}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                                viewModel.analyzeCapturedImage(base64Image, file, isGuest)
+                                onScanCompleted()
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    "Capture failed: ${e.localizedMessage}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     }
                 },

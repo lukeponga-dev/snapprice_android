@@ -31,7 +31,7 @@ class PriceSnapApp : Application() {
     lateinit var scanPreferenceManager: ScanPreferenceManager
     var firestore: FirebaseFirestore? = null
     
-    private lateinit var recaptchaClient: RecaptchaClient
+    private var recaptchaClient: RecaptchaClient? = null
     private val recaptchaScope = CoroutineScope(Dispatchers.IO)
 
     override fun onCreate() {

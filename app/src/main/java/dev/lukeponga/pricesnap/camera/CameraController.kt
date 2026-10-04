@@ -3,6 +3,7 @@ package dev.lukeponga.pricesnap.camera
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.util.Base64
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -24,38 +25,62 @@ object CameraController {
     private var camera: Camera? = null
     var isFlashOn: Boolean = false
         private set
+    var isCameraBound: Boolean = false
+        private set
+    var hasFlashUnit: Boolean = false
+        private set
 
     fun bindCameraPreview(
         context: Context,
         lifecycleOwner: LifecycleOwner,
         previewView: PreviewView,
         imageCapture: ImageCapture,
+        onCameraBound: (hasFlash: Boolean) -> Unit = {},
         onError: (Throwable) -> Unit = {}
     ) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener({
             try {
                 val cameraProvider = cameraProviderFuture.get()
+                val cameraSelector = when {
+                    cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) -> CameraSelector.DEFAULT_BACK_CAMERA
+                    cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) -> CameraSelector.DEFAULT_FRONT_CAMERA
+                    else -> null
+                }
+
+                if (cameraSelector == null) {
+                    isCameraBound = false
+                    camera = null
+                    onError(IllegalStateException("No camera available on this device"))
+                    return@addListener
+                }
+
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
                 cameraProvider.unbindAll()
                 val boundCamera = cameraProvider.bindToLifecycle(
                     lifecycleOwner,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    cameraSelector,
                     preview,
                     imageCapture
                 )
                 camera = boundCamera
-                if (isFlashOn) {
-                    runCatching {
-                        if (boundCamera.cameraInfo.hasFlashUnit()) {
-                            boundCamera.cameraControl.enableTorch(true)
-                        }
-                        imageCapture.flashMode = ImageCapture.FLASH_MODE_ON
+                isCameraBound = true
+                val flashSupported = boundCamera.cameraInfo.hasFlashUnit()
+                hasFlashUnit = flashSupported
+
+                runCatching {
+                    if (flashSupported && isFlashOn) {
+                        boundCamera.cameraControl.enableTorch(true)
                     }
+                    imageCapture.flashMode = if (isFlashOn) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
                 }
+
+                onCameraBound(flashSupported)
             } catch (exc: Exception) {
+                isCameraBound = false
+                camera = null
                 onError(exc)
             }
         }, ContextCompat.getMainExecutor(context))
@@ -78,6 +103,8 @@ object CameraController {
             camera?.cameraControl?.enableTorch(false)
         }
         camera = null
+        isCameraBound = false
+        hasFlashUnit = false
         isFlashOn = false
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
@@ -89,6 +116,10 @@ object CameraController {
         imageCapture: ImageCapture,
         context: Context
     ): String = suspendCoroutine { continuation ->
+        if (!isCameraBound) {
+            continuation.resumeWithException(IllegalStateException("Camera is not active or available"))
+            return@suspendCoroutine
+        }
         val executor: Executor = ContextCompat.getMainExecutor(context)
         imageCapture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
@@ -109,11 +140,18 @@ object CameraController {
     }
 
     private fun imageProxyToBitmap(image: ImageProxy): Bitmap {
+        val rotationDegrees = image.imageInfo.rotationDegrees
         val buffer = image.planes[0].buffer
         val bytes = ByteArray(buffer.remaining())
         buffer.get(bytes)
-        return requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)) {
+        val decoded = requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)) {
             "Camera image could not be decoded"
+        }
+        return if (rotationDegrees != 0) {
+            val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+            Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, matrix, true)
+        } else {
+            decoded
         }
     }
 
