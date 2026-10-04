@@ -8,8 +8,7 @@ plugins {
     alias(libs.plugins.secrets)
     alias(libs.plugins.google.services)
 }
-
-android {
+android{
     namespace = "dev.lukeponga.pricesnap"
     compileSdk = 36
 
@@ -19,8 +18,8 @@ android {
         minSdk = 26
         targetSdk = 36
 
-        versionCode = 15
-        versionName = "15.0"
+        versionCode = 17
+        versionName = "17.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
