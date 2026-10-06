@@ -43,16 +43,23 @@ android{
             val customKeystore = file(keystorePath)
             val storePasswordEnv = System.getenv("STORE_PASSWORD")
             val keyPasswordEnv = System.getenv("KEY_PASSWORD")
-            require(customKeystore.exists()) {
-                "Release signing keystore is missing. Set KEYSTORE_PATH or provide my-upload-key.jks."
+            val releaseRequested = gradle.startParameter.taskNames.any {
+                it.contains("release", ignoreCase = true)
             }
-            require(!storePasswordEnv.isNullOrBlank() && !keyPasswordEnv.isNullOrBlank()) {
-                "Release signing credentials are missing. Set STORE_PASSWORD and KEY_PASSWORD."
+            if (releaseRequested) {
+                require(customKeystore.exists()) {
+                    "Release signing keystore is missing. Set KEYSTORE_PATH or provide my-upload-key.jks."
+                }
+                require(!storePasswordEnv.isNullOrBlank() && !keyPasswordEnv.isNullOrBlank()) {
+                    "Release signing credentials are missing. Set STORE_PASSWORD and KEY_PASSWORD."
+                }
             }
-            storeFile = customKeystore
-            storePassword = storePasswordEnv
-            keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "upload"
-            keyPassword = keyPasswordEnv
+            if (customKeystore.exists()) {
+                storeFile = customKeystore
+                storePassword = storePasswordEnv
+                keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "upload"
+                keyPassword = keyPasswordEnv
+            }
         }
 
         create("debugConfig") {
