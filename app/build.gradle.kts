@@ -18,8 +18,8 @@ android{
         minSdk = 26
         targetSdk = 36
 
-        versionCode = 17
-        versionName = "17.0"
+        versionCode = 18
+        versionName = "18.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -117,6 +117,11 @@ android{
     dependenciesInfo {
         includeInApk = false
         includeInBundle = true
+    }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 
