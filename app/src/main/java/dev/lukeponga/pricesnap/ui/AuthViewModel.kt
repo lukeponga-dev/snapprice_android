@@ -35,19 +35,7 @@ class AuthViewModel(private val authManager: FirebaseAuthenticationManager) : Vi
     val resetPasswordState: StateFlow<PasswordResetState> = _resetPasswordState.asStateFlow()
 
     fun continueAsGuest() {
-        viewModelScope.launch {
-            _authState.value = AuthUiState.Loading
-            when (val result = authManager.signInAnonymously()) {
-                is AuthResult.Success -> {
-                    _isGuestMode.value = true
-                    _authState.value = AuthUiState.Success
-                }
-                is AuthResult.Error -> {
-                    _isGuestMode.value = false
-                    _authState.value = AuthUiState.Error(result.message)
-                }
-            }
-        }
+        _isGuestMode.value = true
     }
 
     fun login(email: String, password: String) {
