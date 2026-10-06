@@ -2,7 +2,6 @@ package dev.lukeponga.pricesnap.network
 
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.appcheck.FirebaseAppCheck
-import com.google.firebase.auth.FirebaseAuth
 import dev.lukeponga.pricesnap.BuildConfig
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -28,12 +27,6 @@ object NetworkClient {
         val requestBuilder = originalRequest.newBuilder()
 
         try {
-            val user = FirebaseAuth.getInstance().currentUser
-            if (user != null) {
-                val idToken = Tasks.await(user.getIdToken(false), 5, TimeUnit.SECONDS).token
-                if (!idToken.isNullOrBlank()) requestBuilder.header("Authorization", "Bearer $idToken")
-            }
-
             val appCheck = FirebaseAppCheck.getInstance()
             val tokenTask = appCheck.getAppCheckToken(false)
             val tokenResult = Tasks.await(tokenTask, 5, TimeUnit.SECONDS)
@@ -42,7 +35,8 @@ object NetworkClient {
                 requestBuilder.header("X-Firebase-AppCheck", token)
             }
         } catch (e: Throwable) {
-            android.util.Log.w("NetworkClient", "Security token acquisition failed; backend will reject the request", e)
+            // App Check token unavailable or timed out; proceed with request to maintain API availability
+            android.util.Log.d("NetworkClient", "App Check token attachment skipped: ${e.message}")
         }
 
         chain.proceed(requestBuilder.build())
