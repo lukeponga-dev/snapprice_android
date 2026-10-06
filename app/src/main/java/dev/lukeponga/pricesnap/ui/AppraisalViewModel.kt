@@ -75,8 +75,8 @@ class AppraisalViewModel(
 
     fun analyzeCapturedImage(base64Image: String, imageFile: File? = null, isGuest: Boolean = false) {
         viewModelScope.launch {
-            if (isGuest && dailyScanCount.value >= 10) {
-                _uiState.value = AppraisalUiState.Error("Daily scan limit reached for guests (10/day). Please sign in for unlimited scans!")
+            if (isGuest && dailyScanCount.value >= 5) {
+                _uiState.value = AppraisalUiState.Error("Daily scan limit reached for guests (5/day). Please sign in for unlimited scans!")
                 return@launch
             }
 

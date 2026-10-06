@@ -122,9 +122,8 @@ fun ScanScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .clip(RoundedCornerShape(26.dp))
                 .background(Color(0xFF0C1D19))
-                .border(BorderStroke(1.5.dp, Color(0xFF14463A)), RoundedCornerShape(26.dp))
+                .border(BorderStroke(1.5.dp, Color(0xFF14463A)), RoundedCornerShape(12.dp))
         ) {
             if (hasCameraPermission && cameraErrorMessage == null) {
                 AndroidView(

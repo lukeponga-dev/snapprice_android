@@ -135,10 +135,10 @@ private fun GuestProfileCard(scanCount: Int, onLogout: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Daily Free Scans Used", color = Color(0xFF9CA3AF), fontSize = 13.sp)
-                Text("$scanCount / 10", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text("$scanCount / 5", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
             LinearProgressIndicator(
-                progress = { (scanCount / 10f).coerceIn(0f, 1f) },
+                progress = { (scanCount / 5f).coerceIn(0f, 1f) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
