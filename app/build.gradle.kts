@@ -194,6 +194,7 @@ dependencies {
     implementation(libs.androidx.credentials.play.services)
     implementation(libs.googleid)
     implementation(libs.recaptcha)
+    implementation(libs.play.services.ads)
 
     // Unit tests
     testImplementation(libs.androidx.compose.ui.test.junit4)

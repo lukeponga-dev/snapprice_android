@@ -97,6 +97,19 @@ class PriceSnapApp : Application() {
         repository = HistoryRepository(database.historyDao(), NetworkClient.apiService, firestore, authManager, this)
         
         initializeRecaptchaClient()
+        initializeGoogleMobileAds()
+    }
+
+    private fun initializeGoogleMobileAds() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                com.google.android.gms.ads.MobileAds.initialize(this@PriceSnapApp) { status ->
+                    android.util.Log.i("PriceSnapApp", "Google Mobile Ads initialized: $status")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("PriceSnapApp", "MobileAds initialization skipped: ${e.message}")
+            }
+        }
     }
 
     private fun initializeRecaptchaClient() {
