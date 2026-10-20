@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lukeponga.pricesnap.R
+import dev.lukeponga.pricesnap.ui.components.AdBannerSpace
 import dev.lukeponga.pricesnap.ui.screens.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,7 +111,11 @@ fun MainContainer(viewModel: AppraisalViewModel, authViewModel: AuthViewModel) {
             )
         },
         bottomBar = {
-            NavigationBar(
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (selectedTab != 1 && uiState !is AppraisalUiState.Loading) {
+                    AdBannerSpace()
+                }
+                NavigationBar(
                 containerColor = Color(0xFF031612),
                 tonalElevation = 0.dp,
                 windowInsets = NavigationBarDefaults.windowInsets,
@@ -152,6 +157,7 @@ fun MainContainer(viewModel: AppraisalViewModel, authViewModel: AuthViewModel) {
                 }
             }
         }
+    }
     ) { innerPadding ->
         Surface(
             modifier = Modifier.fillMaxSize().padding(innerPadding),

@@ -339,6 +339,17 @@ fun SettingsScreen(
                         context.startActivity(intent)
                     }
                 )
+                SettingsDivider()
+                SettingActionRow(
+                    label = "Advertise with Us",
+                    value = "Partner",
+                    icon = Icons.Default.Campaign,
+                    iconTint = Color(0xFF34D399),
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://pricesnap.web.app/"))
+                        context.startActivity(intent)
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))

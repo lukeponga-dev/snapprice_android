@@ -23,6 +23,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lukeponga.pricesnap.R
+import dev.lukeponga.pricesnap.ui.components.AdCardSpace
 
 @Composable
 fun HomeScreen(
@@ -152,6 +153,14 @@ fun HomeScreen(
                     )
                 }
             }
+
+            // Sponsored Ad Space
+            AdCardSpace(
+                modifier = Modifier.widthIn(max = 720.dp),
+                sponsorTitle = "Vintage & Thrift Partners",
+                sponsorDescription = "Explore verified secondhand sellers, antique collectors, and local consignment shops.",
+                actionLabel = "Browse Listings"
+            )
 
             Card(
                 modifier = Modifier

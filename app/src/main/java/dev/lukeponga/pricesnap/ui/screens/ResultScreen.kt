@@ -21,6 +21,7 @@ import dev.lukeponga.pricesnap.model.ValuationResponse
 
 import androidx.compose.ui.res.painterResource
 import dev.lukeponga.pricesnap.R
+import dev.lukeponga.pricesnap.ui.components.AdCardSpace
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -320,6 +321,13 @@ fun ResultScreen(
         appraisal.warnings.orEmpty().forEach { warning ->
             Text(warning, color = Color(0xFF9CA3AF), style = MaterialTheme.typography.bodySmall)
         }
+
+        // Sponsored Ad Space
+        AdCardSpace(
+            sponsorTitle = "Sell Your Item",
+            sponsorDescription = "Turn this item into cash. List on partner marketplaces with zero listing fees.",
+            actionLabel = "Get Started"
+        )
 
         // 5. Bottom Action Buttons
         Row(
