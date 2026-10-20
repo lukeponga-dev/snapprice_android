@@ -19,7 +19,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -72,7 +75,6 @@ fun SettingsScreen(
     var showContactSupportDialog by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
     var showLicencesDialog by remember { mutableStateOf(false) }
-    var showWebsiteDialog by remember { mutableStateOf(false) }
 
     // Account & Profile States
     var showEditProfileDialog by remember { mutableStateOf(false) }
@@ -96,24 +98,27 @@ fun SettingsScreen(
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
-        containerColor = Color(0xFF030E0B),
+        containerColor = Color(0xFF020907),
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF030E0B))
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .background(Color(0xFF020907))
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Text(
                     text = "Settings",
                     color = Color.White,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "Configure your valuation engine & account",
                     color = Color(0xFF6B8078),
-                    fontSize = 13.sp
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -123,8 +128,8 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Profile & Account Hero
             ProfileHeroCard(
@@ -314,10 +319,25 @@ fun SettingsScreen(
                     onClick = { showLicencesDialog = true }
                 )
                 SettingsDivider()
+                val context = LocalContext.current
                 SettingActionRow(
                     label = "PriceSnap Website",
                     icon = Icons.Default.Language,
-                    onClick = { showWebsiteDialog = true }
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://pricesnap.web.app/"))
+                        context.startActivity(intent)
+                    }
+                )
+                SettingsDivider()
+                SettingActionRow(
+                    label = "Buy Me a Coffee",
+                    value = "Support",
+                    icon = Icons.Default.LocalCafe,
+                    iconTint = Color(0xFFFFDD00),
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/lukeponga9x"))
+                        context.startActivity(intent)
+                    }
                 )
             }
 
@@ -427,10 +447,6 @@ fun SettingsScreen(
 
     if (showLicencesDialog) {
         LicencesDialog(onDismiss = { showLicencesDialog = false })
-    }
-
-    if (showWebsiteDialog) {
-        WebsiteDialog(onDismiss = { showWebsiteDialog = false })
     }
 
     if (showManageDataDialog) {

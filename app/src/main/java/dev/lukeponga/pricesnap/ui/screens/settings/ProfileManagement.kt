@@ -3,6 +3,7 @@ package dev.lukeponga.pricesnap.ui.screens.settings
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -75,22 +76,37 @@ fun ProfileHeroCard(
 
 @Composable
 private fun GuestProfileCard(scanCount: Int, onLogout: () -> Unit) {
+    val cardGradient = Brush.verticalGradient(
+        colors = listOf(Color(0xFF0F1E19), Color(0xFF050E0C))
+    )
+    val borderGradient = Brush.linearGradient(
+        colors = listOf(Color(0xFF10B981).copy(alpha = 0.4f), Color(0xFF1E382E).copy(alpha = 0.1f))
+    )
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = Color(0xFF101C18),
-        border = BorderStroke(1.dp, Color(0xFF1E382E))
+        shape = RoundedCornerShape(24.dp),
+        color = Color.Transparent,
+        border = BorderStroke(1.2.dp, borderGradient)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(
+            modifier = Modifier
+                .background(cardGradient)
+                .padding(20.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(54.dp)
+                        .size(58.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF1A2E27)),
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF2E1F0B), Color(0xFF452E0B))
+                            )
+                        )
+                        .border(1.dp, Color(0xFFF59E0B).copy(alpha = 0.3f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -102,62 +118,63 @@ private fun GuestProfileCard(scanCount: Int, onLogout: () -> Unit) {
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Guest User",
+                        text = "Guest Account",
                         color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(7.dp)
+                                .size(8.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFFF59E0B))
                         )
                         Text(
-                            text = "Local Storage Only · Not Synced",
+                            text = "Local Storage · No Cloud Backup",
                             color = Color(0xFFFBBF24),
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Daily Free Scans Used", color = Color(0xFF9CA3AF), fontSize = 13.sp)
-                Text("$scanCount / 5", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text("Daily Free Scans Used", color = Color(0xFF9CA3AF), fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+                Text("$scanCount / 5", color = Color(0xFF34D399), fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
             }
             LinearProgressIndicator(
                 progress = { (scanCount / 5f).coerceIn(0f, 1f) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .height(6.dp)
+                    .padding(vertical = 10.dp)
+                    .height(8.dp)
                     .clip(CircleShape),
                 color = Color(0xFF10B981),
-                trackColor = Color(0xFF0C1D19)
+                trackColor = Color(0xFF0F1E19)
             )
             Text(
-                "Sign in with Google or Email to synchronize all your scans across devices and unlock unlimited daily valuations!",
+                "Register a free account to back up and sync all your appraisals across devices and unlock unlimited valuations!",
                 color = Color(0xFF9CA3AF),
                 fontSize = 12.5.sp,
-                lineHeight = 17.sp
+                lineHeight = 18.sp
             )
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = onLogout,
-                modifier = Modifier.fillMaxWidth().height(46.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
             ) {
                 Icon(Icons.Default.Login, contentDescription = null, tint = Color(0xFF031612), modifier = Modifier.size(18.dp))
@@ -178,33 +195,45 @@ private fun AuthenticatedProfileCard(
     onSyncNow: () -> Unit,
     onEditName: () -> Unit
 ) {
+    val cardGradient = Brush.verticalGradient(
+        colors = listOf(Color(0xFF0C241B), Color(0xFF040E0A))
+    )
+    val borderGradient = Brush.linearGradient(
+        colors = listOf(Color(0xFF34D399).copy(alpha = 0.5f), Color(0xFF132B21).copy(alpha = 0.1f))
+    )
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = Color(0xFF0D1E18),
-        border = BorderStroke(1.dp, Color(0xFF1A3E32))
+        shape = RoundedCornerShape(24.dp),
+        color = Color.Transparent,
+        border = BorderStroke(1.2.dp, borderGradient)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(
+            modifier = Modifier
+                .background(cardGradient)
+                .padding(20.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(60.dp)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                listOf(Color(0xFF059669), Color(0xFF10B981))
+                                colors = listOf(Color(0xFF059669), Color(0xFF10B981))
                             )
-                        ),
+                        )
+                        .border(1.5.dp, Color(0xFF34D399).copy(alpha = 0.3f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = initials,
                         color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.5).sp
                     )
                 }
 
@@ -216,20 +245,21 @@ private fun AuthenticatedProfileCard(
                         Text(
                             text = effectiveName,
                             color = Color.White,
-                            fontSize = 18.sp,
+                            fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            letterSpacing = (-0.3).sp
                         )
                         IconButton(
                             onClick = onEditName,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
                                 Icons.Default.Edit,
                                 contentDescription = "Edit name",
-                                tint = Color(0xFF10B981),
-                                modifier = Modifier.size(14.dp)
+                                tint = Color(0xFF34D399),
+                                modifier = Modifier.size(15.dp)
                             )
                         }
                     }
@@ -237,7 +267,7 @@ private fun AuthenticatedProfileCard(
                     Text(
                         text = userEmail ?: "No email set",
                         color = Color(0xFF9CA3AF),
-                        fontSize = 13.sp,
+                        fontSize = 13.5.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -248,28 +278,28 @@ private fun AuthenticatedProfileCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(
                     onClick = onEditName,
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, Color(0xFF1E4336)),
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.2.dp, Color(0xFF14463A)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF34D399))
                 ) {
-                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Edit Name", fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Edit Profile", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Button(
                     onClick = onSyncNow,
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
                 ) {
                     Icon(
@@ -277,14 +307,14 @@ private fun AuthenticatedProfileCard(
                         contentDescription = null,
                         tint = Color(0xFF031612),
                         modifier = Modifier
-                            .size(14.dp)
+                            .size(15.dp)
                             .then(if (syncStatus is SyncStatus.Syncing) Modifier.rotate(syncRotation) else Modifier)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         if (syncStatus is SyncStatus.Syncing) "Syncing..." else "Sync Now",
                         color = Color(0xFF031612),
-                        fontSize = 12.5.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
