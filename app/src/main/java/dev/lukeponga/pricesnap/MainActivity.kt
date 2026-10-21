@@ -12,6 +12,10 @@ import dev.lukeponga.pricesnap.ui.MainContainer
 import dev.lukeponga.pricesnap.ui.screens.AuthScreen
 import dev.lukeponga.pricesnap.ui.theme.PriceSnapTheme
 
+/**
+ * Entry point for the PriceSnap application.
+ * Manages the main UI container and handles authentication state switching.
+ */
 class MainActivity : ComponentActivity() {
     private val viewModel: AppraisalViewModel by viewModels {
         val app = application as PriceSnapApp
@@ -26,6 +30,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PriceSnapTheme {
+                // Collect authentication state to determine the navigation flow
                 val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
                 val isGuestMode by authViewModel.isGuestMode.collectAsState()
                 

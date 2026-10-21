@@ -21,6 +21,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * Main Application class for PriceSnap.
+ * Handles initialization of dependencies, Firebase, Room database, and external SDKs.
+ */
 class PriceSnapApp : Application() {
     companion object {
         const val RECAPTCHA_SITE_KEY = "6LfKJsUtAAAAADXSiynxypRKf5DhLS1BiIMOFOcA"
@@ -30,21 +34,24 @@ class PriceSnapApp : Application() {
     lateinit var authManager: FirebaseAuthenticationManager
     lateinit var scanPreferenceManager: ScanPreferenceManager
     var firestore: FirebaseFirestore? = null
-    
+
     private var recaptchaClient: RecaptchaClient? = null
     private val recaptchaScope = CoroutineScope(Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
 
+        initializeLocalData()
+        initializeFirebase()
+        initializeRepositories()
+        initializeExternalSdks()
+    }
+
+    private fun initializeLocalData() {
         scanPreferenceManager = ScanPreferenceManager(this)
+    }
 
-        val database = Room.databaseBuilder(
-            this,
-            AppDatabase::class.java,
-            "pricesnap_history_db"
-        ).build()
-
+    private fun initializeFirebase() {
         // Initialize Firebase with fallback to programmatic options
         val firebaseApp = try {
             FirebaseApp.initializeApp(this)
@@ -65,37 +72,53 @@ class PriceSnapApp : Application() {
         }
 
         if (firebaseApp != null) {
-            try {
-                val appCheck = FirebaseAppCheck.getInstance(firebaseApp)
-                val appCheckFactory = if (BuildConfig.DEBUG) {
-                    DebugAppCheckProviderFactory.getInstance()
-                } else {
-                    RecaptchaAppCheckProviderFactory.getInstance(RECAPTCHA_SITE_KEY)
-                }
-                appCheck.installAppCheckProviderFactory(appCheckFactory)
-                appCheck.setTokenAutoRefreshEnabled(true)
-                android.util.Log.i("PriceSnapApp", "Firebase App Check successfully initialized with Recaptcha provider")
-            } catch (e: Exception) {
-                android.util.Log.w("PriceSnapApp", "Firebase App Check initialization skipped/failed: ${e.message}")
-            }
-
-            try {
-                firestore = FirebaseFirestore.getInstance()
-                authManager = FirebaseAuthenticationManager(FirebaseAuth.getInstance())
-                android.util.Log.i("PriceSnapApp", "Firebase successfully initialized")
-            } catch (e: Exception) {
-                android.util.Log.e("PriceSnapApp", "Failed to get Firestore/FirebaseAuth", e)
-                firestore = null
-                authManager = FirebaseAuthenticationManager(null)
-            }
+            setupAppCheck(firebaseApp)
+            setupFirebaseServices()
         } else {
             android.util.Log.w("PriceSnapApp", "FirebaseApp could not be initialized")
             firestore = null
             authManager = FirebaseAuthenticationManager(null)
         }
-        
+    }
+
+    private fun setupAppCheck(firebaseApp: FirebaseApp) {
+        try {
+            val appCheck = FirebaseAppCheck.getInstance(firebaseApp)
+            val appCheckFactory = if (BuildConfig.DEBUG) {
+                DebugAppCheckProviderFactory.getInstance()
+            } else {
+                RecaptchaAppCheckProviderFactory.getInstance(RECAPTCHA_SITE_KEY)
+            }
+            appCheck.installAppCheckProviderFactory(appCheckFactory)
+            appCheck.setTokenAutoRefreshEnabled(true)
+            android.util.Log.i("PriceSnapApp", "Firebase App Check successfully initialized")
+        } catch (e: Exception) {
+            android.util.Log.w("PriceSnapApp", "Firebase App Check initialization skipped/failed: ${e.message}")
+        }
+    }
+
+    private fun setupFirebaseServices() {
+        try {
+            firestore = FirebaseFirestore.getInstance()
+            authManager = FirebaseAuthenticationManager(FirebaseAuth.getInstance())
+            android.util.Log.i("PriceSnapApp", "Firebase successfully initialized")
+        } catch (e: Exception) {
+            android.util.Log.e("PriceSnapApp", "Failed to get Firestore/FirebaseAuth", e)
+            firestore = null
+            authManager = FirebaseAuthenticationManager(null)
+        }
+    }
+
+    private fun initializeRepositories() {
+        val database = Room.databaseBuilder(
+            this,
+            AppDatabase::class.java,
+            "pricesnap_history_db"
+        ).build()
         repository = HistoryRepository(database.historyDao(), NetworkClient.apiService, firestore, authManager, this)
-        
+    }
+
+    private fun initializeExternalSdks() {
         initializeRecaptchaClient()
         initializeGoogleMobileAds()
     }
@@ -115,11 +138,11 @@ class PriceSnapApp : Application() {
     private fun initializeRecaptchaClient() {
         recaptchaScope.launch {
             try {
-                recaptchaClient = Recaptcha.fetchClient(this@PriceSnapApp, "6LfKJsUtAAAAADXSiynxypRKf5DhLS1BiIMOFOcA")
+                recaptchaClient = Recaptcha.fetchClient(this@PriceSnapApp, RECAPTCHA_SITE_KEY)
             } catch(e: RecaptchaException) {
                 android.util.Log.e("PriceSnapApp", "Failed to fetch Recaptcha client", e)
             } catch(e: Exception) {
-                android.util.Log.w("PriceSnapApp", "Recaptcha initialization skipped in emulator: ${e.message}")
+                android.util.Log.w("PriceSnapApp", "Recaptcha initialization skipped: ${e.message}")
             }
         }
     }
